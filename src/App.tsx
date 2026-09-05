@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { AuthCard } from './components/AuthCard';
-import { DashboardView } from './components/DashboardView';
+import { CloudImageTestingPage } from './components/CloudImageTestingPage';
 import { CloudConfigModal } from './components/CloudConfigModal';
 import {
   testCloudConnection,
@@ -236,10 +236,11 @@ export default function App() {
       <main className="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:py-12">
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center">
           {user ? (
-            <DashboardView
+            <CloudImageTestingPage
               user={user}
               cloudStatus={cloudStatus}
               onLogout={handleLogout}
+              onOpenSettings={() => setIsSettingsOpen(true)}
               onTestPing={checkCloudHealth}
               isDemo={isDemoUser}
             />

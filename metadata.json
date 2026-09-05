@@ -1,6 +1,6 @@
 {
   "name": "Games farist - تسجيل الدخول السحابي",
-  "description": "واجهة تسجيل دخول وتجربة السحابة متوافقة مع جميع الأجهزة مع دعم تسجيل الدخول بحسابات التواصل الاجتماعي",
+  "description": "واجهة تسجيل دخول سحابية ومعمل رفع صور واختبارات السحاب مع الحفاظ على بيانات الربط لـ Games farist",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

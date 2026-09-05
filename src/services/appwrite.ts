@@ -1,12 +1,14 @@
-import { Client, Account, ID, OAuthProvider } from 'appwrite';
-import type { CloudConfig, UserProfile, CloudConnectionStatus } from '../types';
+import { Client, Account, ID, OAuthProvider, Storage } from 'appwrite';
+import type { CloudConfig, UserProfile, CloudConnectionStatus, CloudFileItem } from '../types';
 
 export const DEFAULT_CONFIG: CloudConfig = {
   endpoint: 'https://fra.cloud.appwrite.io/v1',
   projectId: '6a9b9f2a00110d93d685',
+  bucketId: 'test-images',
 };
 
 const STORAGE_KEY = 'games_farist_appwrite_config';
+const LOCAL_FILES_KEY = 'games_farist_local_test_files';
 
 export function getStoredConfig(): CloudConfig {
   try {
@@ -14,7 +16,10 @@ export function getStoredConfig(): CloudConfig {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed.endpoint && parsed.projectId) {
-        return parsed;
+        return {
+          ...DEFAULT_CONFIG,
+          ...parsed,
+        };
       }
     }
   } catch (e) {
@@ -28,6 +33,7 @@ export function saveStoredConfig(config: CloudConfig): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     clientInstance = null;
     accountInstance = null;
+    storageInstance = null;
   } catch (e) {
     console.error('Failed to save config to localStorage', e);
   }
@@ -38,6 +44,7 @@ export function resetStoredConfig(): CloudConfig {
     localStorage.removeItem(STORAGE_KEY);
     clientInstance = null;
     accountInstance = null;
+    storageInstance = null;
   } catch (e) {
     console.error('Failed to reset config', e);
   }
@@ -46,6 +53,7 @@ export function resetStoredConfig(): CloudConfig {
 
 let clientInstance: Client | null = null;
 let accountInstance: Account | null = null;
+let storageInstance: Storage | null = null;
 
 export function getAppwriteClient(): Client {
   if (!clientInstance) {
@@ -61,6 +69,166 @@ export function getAppwriteAccount(): Account {
     accountInstance = new Account(getAppwriteClient());
   }
   return accountInstance;
+}
+
+export function getAppwriteStorage(): Storage {
+  if (!storageInstance) {
+    storageInstance = new Storage(getAppwriteClient());
+  }
+  return storageInstance;
+}
+
+export function getEffectiveBucketId(overrideBucketId?: string): string {
+  const config = getStoredConfig();
+  return overrideBucketId || config.bucketId || 'test-images';
+}
+
+/**
+ * Upload an image to Appwrite Cloud Storage
+ */
+export async function uploadCloudImage(
+  file: File,
+  customBucketId?: string,
+  onProgress?: (percent: number) => void
+): Promise<CloudFileItem> {
+  const storage = getAppwriteStorage();
+  const bucketId = getEffectiveBucketId(customBucketId);
+  const fileId = ID.unique();
+
+  try {
+    const res = await storage.createFile(
+      bucketId,
+      fileId,
+      file,
+      undefined,
+      (progress) => {
+        if (onProgress && typeof progress.progress === 'number') {
+          onProgress(Math.round(progress.progress));
+        }
+      }
+    );
+
+    const viewUrl = storage.getFileView(bucketId, res.$id).toString();
+    const previewUrl = storage.getFilePreview(bucketId, res.$id, 600, 600).toString();
+
+    const cloudFile: CloudFileItem = {
+      $id: res.$id,
+      name: res.name || file.name,
+      sizeOriginal: res.sizeOriginal || file.size,
+      mimeType: res.mimeType || file.type,
+      $createdAt: res.$createdAt || new Date().toISOString(),
+      bucketId: res.bucketId || bucketId,
+      viewUrl,
+      previewUrl,
+      isLocalMock: false,
+    };
+
+    // Also persist in local record list for reference
+    saveLocalRecordedFile(cloudFile);
+    return cloudFile;
+  } catch (err: any) {
+    console.error('Appwrite Storage Upload Error:', err);
+    throw err;
+  }
+}
+
+/**
+ * List files in cloud storage
+ */
+export async function listCloudImages(customBucketId?: string): Promise<CloudFileItem[]> {
+  const storage = getAppwriteStorage();
+  const bucketId = getEffectiveBucketId(customBucketId);
+
+  try {
+    const res = await storage.listFiles(bucketId);
+    return res.files.map((f: any) => {
+      const viewUrl = storage.getFileView(bucketId, f.$id).toString();
+      const previewUrl = storage.getFilePreview(bucketId, f.$id, 600, 600).toString();
+      return {
+        $id: f.$id,
+        name: f.name,
+        sizeOriginal: f.sizeOriginal,
+        mimeType: f.mimeType,
+        $createdAt: f.$createdAt,
+        bucketId: f.bucketId,
+        viewUrl,
+        previewUrl,
+        isLocalMock: false,
+      };
+    });
+  } catch (err: any) {
+    console.warn('Could not list files from Appwrite bucket, returning locally recorded tests:', err);
+    // Return cached/local test files so user is never blocked
+    return getLocalRecordedFiles();
+  }
+}
+
+/**
+ * Delete a file from Cloud Storage
+ */
+export async function deleteCloudImage(fileId: string, customBucketId?: string): Promise<void> {
+  const storage = getAppwriteStorage();
+  const bucketId = getEffectiveBucketId(customBucketId);
+
+  try {
+    await storage.deleteFile(bucketId, fileId);
+  } catch (err) {
+    console.warn('Cloud file delete error (might be local demo item):', err);
+  }
+  removeLocalRecordedFile(fileId);
+}
+
+// Local File Tracker for preview & offline resilience
+function getLocalRecordedFiles(): CloudFileItem[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_FILES_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.warn(e);
+  }
+  return [];
+}
+
+function saveLocalRecordedFile(item: CloudFileItem): void {
+  try {
+    const existing = getLocalRecordedFiles().filter((f) => f.$id !== item.$id);
+    localStorage.setItem(LOCAL_FILES_KEY, JSON.stringify([item, ...existing]));
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+function removeLocalRecordedFile(fileId: string): void {
+  try {
+    const existing = getLocalRecordedFiles().filter((f) => f.$id !== fileId);
+    localStorage.setItem(LOCAL_FILES_KEY, JSON.stringify(existing));
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+export function saveDemoTestFile(file: File): Promise<CloudFileItem> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const fakeId = 'local_test_' + Math.random().toString(36).substring(2, 9);
+      const item: CloudFileItem = {
+        $id: fakeId,
+        name: file.name,
+        sizeOriginal: file.size,
+        mimeType: file.type || 'image/jpeg',
+        $createdAt: new Date().toISOString(),
+        bucketId: 'demo-local-bucket',
+        viewUrl: dataUrl,
+        previewUrl: dataUrl,
+        isLocalMock: true,
+      };
+      saveLocalRecordedFile(item);
+      resolve(item);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 /**

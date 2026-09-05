@@ -30,6 +30,7 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
   const currentConfig = getStoredConfig();
   const [endpoint, setEndpoint] = useState(currentConfig.endpoint);
   const [projectId, setProjectId] = useState(currentConfig.projectId);
+  const [bucketId, setBucketId] = useState(currentConfig.bucketId || 'test-images');
   const [saved, setSaved] = useState(false);
   const [copiedOrigin, setCopiedOrigin] = useState(false);
 
@@ -37,7 +38,11 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    saveStoredConfig({ endpoint: endpoint.trim(), projectId: projectId.trim() });
+    saveStoredConfig({
+      endpoint: endpoint.trim(),
+      projectId: projectId.trim(),
+      bucketId: bucketId.trim() || 'test-images',
+    });
     setSaved(true);
     onConfigUpdated();
     setTimeout(() => setSaved(false), 2000);
@@ -47,6 +52,7 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
     const def = resetStoredConfig();
     setEndpoint(def.endpoint);
     setProjectId(def.projectId);
+    setBucketId(def.bucketId || 'test-images');
     setSaved(true);
     onConfigUpdated();
     setTimeout(() => setSaved(false), 2000);
@@ -151,6 +157,24 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
               dir="ltr"
               className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono focus:border-rose-500 focus:outline-none"
             />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-300 mb-1">
+              حاوية التخزين لاختبارات الصور (Storage Bucket ID):
+            </label>
+            <input
+              type="text"
+              required
+              value={bucketId}
+              onChange={(e) => setBucketId(e.target.value)}
+              placeholder="test-images"
+              dir="ltr"
+              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono focus:border-rose-500 focus:outline-none"
+            />
+            <p className="text-[10px] text-slate-400 mt-1">
+              يمكنك إنشاء هذه الحاوية في Appwrite Cloud &gt; Storage &gt; Create Bucket وإعطائها صلاحية Any أو Users.
+            </p>
           </div>
 
           {saved && (

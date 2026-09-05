@@ -1,6 +1,19 @@
 export interface CloudConfig {
   endpoint: string;
   projectId: string;
+  bucketId?: string;
+}
+
+export interface CloudFileItem {
+  $id: string;
+  name: string;
+  sizeOriginal: number;
+  mimeType: string;
+  $createdAt: string;
+  bucketId: string;
+  viewUrl: string;
+  previewUrl: string;
+  isLocalMock?: boolean;
 }
 
 export interface UserProfile {
