@@ -146,7 +146,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
         senderName: sName,
         senderEmail: sEmail,
         phone: sPhone,
-        subject: newSubject.trim() || 'استفسار من غرفة المتجر',
+        subject: newSubject.trim() || 'استفسار من المتجر',
         message: newMessageText.trim(),
       });
 
@@ -155,12 +155,12 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
       setNewMessageText('');
       setMessageAlert({
         type: 'success',
-        text: 'تم حفظ الرسالة والاحتفاظ بها سحابياً بنجاح عبر المفتاح السحابي!',
+        text: 'تم إرسال وحفظ رسالتك بنجاح وسيتواصل معك فريق الدعم قريباً!',
       });
     } catch (err: any) {
       setMessageAlert({
         type: 'error',
-        text: 'تعذر حفظ الرسالة سحابياً، يرجى المحاولة لاحقاً',
+        text: 'تعذر إرسال الرسالة حالياً، يرجى المحاولة لاحقاً',
       });
     } finally {
       setSendingMessage(false);
@@ -211,13 +211,13 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
           <div className="text-right cursor-pointer" onClick={() => setIsMinimized(false)}>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-slate-100 font-['Tajawal']">
-                {user ? (user.name || user.email) : 'غرفة التحديثات والحساب'}
+                {user ? (user.name || user.email) : 'الملف الشخصي والرسائل'}
               </span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400/20 text-amber-300 font-mono">
                 {user ? `${points} نقطة` : 'زائر'}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400">انقر لتكبير الغرفة</p>
+            <p className="text-[10px] text-slate-400">انقر لفتح الملف الشخصي</p>
           </div>
           <button
             type="button"
@@ -254,14 +254,14 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm sm:text-base font-black text-white font-['Tajawal']">
-                  غرفة المتجر الموحدة • متجر فهد
+                  الملف الشخصي والخدمات • متجر فهد
                 </h3>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
                   {user ? 'عميل مسجل' : 'حساب زائر'}
                 </span>
               </div>
               <p className="text-[11px] text-slate-300">
-                البروفيل الشخصي • الرسائل واستفسارات المتجر • آخر التحديثات
+                الملف الشخصي • الرسائل واستفسارات المتجر • آخر التحديثات
               </p>
             </div>
           </div>
@@ -313,7 +313,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                 }`}
               >
                 <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
-                <span>الرسائل السحابية</span>
+                <span>الرسائل والاستفسارات</span>
                 <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-mono">
                   {messages.length}
                 </span>
@@ -633,7 +633,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                   className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-rose-500/10 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                 >
                   {loadingAuth ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
-                  <span>{loadingAuth ? 'جاري إنشاء الحساب...' : 'إنشاء الحساب وحفظ البيانات سحابياً'}</span>
+                  <span>{loadingAuth ? 'جاري إنشاء الحساب...' : 'إنشاء الحساب وحفظ بيانات التوصيل'}</span>
                 </button>
               </form>
             </div>
@@ -645,9 +645,9 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
               {/* Send Message Form */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 flex items-center gap-1">
-                    <Cloud className="w-3 h-3" />
-                    <span>حفظ فوري في السحابة</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>خدمة عملاء مباشرة</span>
                   </span>
                   <h4 className="text-xs font-bold text-slate-800 font-['Tajawal']">
                     إرسال استفسار أو رسالة جديدة
@@ -709,7 +709,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                   <textarea
                     rows={2}
                     required
-                    placeholder="اكتب استفسارك هنا، وسيتم حفظه سحابياً دائماً..."
+                    placeholder="اكتب استفسارك هنا، وسيقوم فريق خدمة عملاء متجر فهد بمتابعة طلبك..."
                     value={newMessageText}
                     onChange={(e) => setNewMessageText(e.target.value)}
                     className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none"
@@ -726,7 +726,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                       ) : (
                         <Send className="w-3.5 h-3.5" />
                       )}
-                      <span>{sendingMessage ? 'جاري الإرسال...' : 'إرسال واستبقاء في السحابة'}</span>
+                      <span>{sendingMessage ? 'جاري الإرسال...' : 'إرسال الاستفسار الآن'}</span>
                     </button>
                   </div>
                 </form>
@@ -743,11 +743,11 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                     <RefreshCw className={`w-3 h-3 ${loadingMessages ? 'animate-spin' : ''}`} />
                     <span>تحديث القائمة</span>
                   </button>
-                  <span className="font-bold text-slate-700">سجل الرسائل المحفوظة ({messages.length})</span>
+                  <span className="font-bold text-slate-700">سجل الرسائل والاستفسارات ({messages.length})</span>
                 </div>
 
                 {loadingMessages ? (
-                  <div className="text-center py-6 text-xs text-slate-400">جاري تحميل الرسائل من السحابة...</div>
+                  <div className="text-center py-6 text-xs text-slate-400">جاري تحميل الرسائل...</div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-6 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-400">
                     لا توجد رسائل محفوظة حتى الآن. أرسل أول استفسار لك أعلاه!
@@ -793,7 +793,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                   <span>سجل التحديثات الشاملة لمتجر فهد (Latest Updates)</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  تم جمع كافة التحديثات والرسائل والملف الشخصي في هذه الغرفة الموحدة لتوفير تجربة تصفح نقية ومثالية على شاشات الموبايل.
+                  تم جمع كافة التحديثات والرسائل والملف الشخصي في هذه النافذة لتوفير تجربة تصفح نقية ومثالية على شاشات الموبايل والحواسيب.
                 </p>
               </div>
 
@@ -805,11 +805,11 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                       التحديث الأحدث
                     </span>
                     <h4 className="text-xs font-bold text-slate-900 font-['Tajawal']">
-                      1. الغرفة الموحدة وإعادة ضبط الترويسة
+                      1. الترويسة الميسرة والملف الشخصي المدمج
                     </h4>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    نقل جميع التحديثات، استبقاء الرسائل، البروفيل، والتسجيل داخل هذه الغرفة الموحدة في أعلى الموقع، مع إبقاء اسم الشركة (فهد)، اللوجو (الذي يعيدك للصفحة الرئيسية عند النقر عليه)، والسلة فقط.
+                    تمكين زر اللوجو للعودة المباشرة للصفحة الرئيسية، وزر السلة مع عدد القطع، وزر الملف الشخصي والرسائل مع تصغير سلس.
                   </p>
                 </div>
 
@@ -819,25 +819,25 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                       مفعل وشغال
                     </span>
                     <h4 className="text-xs font-bold text-slate-900 font-['Tajawal']">
-                      2. مربع العرض الرباعي (4 منتجات في مربع واحد وشاشة واحدة)
+                      2. أسلوب العرض 4*4 للفئات وصفحات مخصصة
                     </h4>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    عرض 4 منتجات في مربع متناسق (2x2) يظهر في شاشة واحدة مناسبة للموبايل تماماً بدون تمدد أو قص.
+                    عرض 4 منتجات في مربع متناسق ومتجاوب (2x2) على شاشة الموبايل لكل فئة، مع صفحات مخصصة لكل فئة والتنقل السلس بينها.
                   </p>
                 </div>
 
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">
-                      سحابي ومحمي
+                      حفظ مستمر
                     </span>
                     <h4 className="text-xs font-bold text-slate-900 font-['Tajawal']">
-                      3. المفتاح السحابي واستبقاء الرسائل الدائم
+                      3. استبقاء الرسائل وتوثيق الاستفسارات
                     </h4>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    تكامل كامل مع السحابة بالمفتاح المشفر والاحتفاظ التلقائي بجميع رسائل واستفسارات المتجر مع التواريخ وجهات الاتصال.
+                    الاحتفاظ التلقائي بجميع رسائل واستفسارات العملاء على مدار الساعة مع التواريخ والموضوعات لخدمة سريعة.
                   </p>
                 </div>
 
@@ -870,7 +870,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
               تسجيل الخروج
             </button>
           ) : (
-            <span className="text-slate-500 text-[11px]">متجر فهد للأزياء • أمان سحابي</span>
+            <span className="text-slate-500 text-[11px]">متجر فهد للأزياء • تسوق آمن وممتع</span>
           )}
 
           <div className="flex items-center gap-2">

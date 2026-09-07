@@ -18,7 +18,7 @@ interface NavbarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenCart: () => void;
-  onOpenUnifiedRoom: () => void;
+  onOpenProfile: () => void;
   onGoHome: () => void;
 }
 
@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
   onSearchChange,
   onOpenCart,
-  onOpenUnifiedRoom,
+  onOpenProfile,
   onGoHome,
 }) => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -103,22 +103,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Unified Room Button (All Updates, Profile, Messages, and Cloud in One Room) */}
+          {/* Customer Profile & Messages Button */}
           <button
             type="button"
-            onClick={onOpenUnifiedRoom}
+            onClick={onOpenProfile}
             className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200/90 text-slate-800 text-xs font-bold transition-all cursor-pointer border border-slate-200/80 shadow-2xs"
-            title="غرفة المتجر الموحدة: البروفيل، الرسائل، وآخر التحديثات"
+            title="الملف الشخصي، استفسارات المتجر، وآخر التحديثات"
           >
             <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
               {user ? (user.name ? user.name[0] : 'U') : <User className="w-3.5 h-3.5" />}
             </div>
             <div className="flex items-center gap-1">
               <span className="hidden sm:inline font-bold">
-                {user ? user.name.split(' ')[0] : 'غرفة التحديثات والحساب'}
+                {user ? user.name.split(' ')[0] : 'الملف الشخصي'}
               </span>
               <span className="sm:hidden text-[11px] font-bold">
-                {user ? 'حسابي' : 'الغرفة'}
+                {user ? 'حسابي' : 'حسابي'}
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
             </div>
