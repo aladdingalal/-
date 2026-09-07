@@ -1,6 +1,6 @@
 {
   "name": "Games farist - تسجيل الدخول السحابي",
-  "description": "متجر فهد (FAHAD) للأزياء والإكسسوارات الفاخرة لجميع الفئات مع نظام نقاط ومكافآت وشريط علوي اختياري للتسجيل",
+  "description": "متجر فهد (FAHAD) للأزياء والإكسسوارات الفاخرة مع مفتاح سحابي لرفع الصور والاحتفاظ بالرسائل ونظام نقاط المكافآت",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

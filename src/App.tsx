@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Navbar } from './components/Navbar';
-import { OptionalAuthTopBar } from './components/OptionalAuthTopBar';
 import { StoreHero } from './components/StoreHero';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailsModal } from './components/ProductDetailsModal';
 import { CartDrawer } from './components/CartDrawer';
-import { CloudImageTestingPage } from './components/CloudImageTestingPage';
 import { CloudConfigModal } from './components/CloudConfigModal';
+import { CustomerMessagesModal } from './components/CustomerMessagesModal';
+import { CustomerProfilePopup } from './components/CustomerProfilePopup';
 import { INITIAL_PRODUCTS } from './data/products';
 import {
   testCloudConnection,
@@ -26,22 +26,27 @@ import type {
   UserRegistrationData,
 } from './types';
 import {
-  Smartphone,
-  Monitor,
-  Tablet,
   ShoppingBag,
   Sparkles,
   Search,
   Filter,
   Shirt,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  Grid,
 } from 'lucide-react';
 
 export default function App() {
-  // Navigation & View State
-  const [currentView, setCurrentView] = useState<'store' | 'cloudLab'>('store');
-  const [isAuthBarExpanded, setIsAuthBarExpanded] = useState(false);
+  // Navigation & Modal State
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+
+  // 4-Products in One Square View State
+  const [displayMode, setDisplayMode] = useState<'quad' | 'grid'>('quad');
+  const [quadPage, setQuadPage] = useState(0);
 
   // User & Cloud Authentication State
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -126,10 +131,8 @@ export default function App() {
     try {
       const loggedProfile = await loginWithEmail(email, pass);
       setUser(loggedProfile);
-      setAuthSuccess('تم تسجيل الدخول بنجاح! مرحباً بك في متجر Games farist.');
-      setTimeout(() => {
-        setIsAuthBarExpanded(false);
-      }, 1400);
+      setAuthSuccess('تم تسجيل الدخول بنجاح! مرحباً بك في متجر فهد (FAHAD).');
+      setIsProfilePopupOpen(true);
     } catch (error: any) {
       console.error('Login error:', error);
       const translated = translateAppwriteError(error);
@@ -162,9 +165,7 @@ export default function App() {
       );
       setUser(newProfile);
       setAuthSuccess('تم إنشاء الحساب وحفظ بيانات الإقامة والعنوان بنجاح في السحابة!');
-      setTimeout(() => {
-        setIsAuthBarExpanded(false);
-      }, 1600);
+      setIsProfilePopupOpen(true);
     } catch (error: any) {
       console.error('Register error:', error);
       const translated = translateAppwriteError(error);
@@ -281,31 +282,38 @@ export default function App() {
     });
   }, [products, selectedCategory, searchQuery]);
 
+  // Quad Pagination (4 products in one square box / single screen)
+  const QUAD_SIZE = 4;
+  const totalQuadPages = Math.max(1, Math.ceil(filteredProducts.length / QUAD_SIZE));
+
+  useEffect(() => {
+    setQuadPage(0);
+  }, [selectedCategory, searchQuery]);
+
+  const currentQuadProducts = useMemo(() => {
+    if (displayMode === 'grid') return filteredProducts;
+    const start = quadPage * QUAD_SIZE;
+    return filteredProducts.slice(start, start + QUAD_SIZE);
+  }, [filteredProducts, quadPage, displayMode]);
+
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-['Cairo'] relative selection:bg-rose-500 selection:text-white">
-      {/* 1. Optional Top Bar for Login & Registration (Requested) */}
-      <OptionalAuthTopBar
-        user={user}
-        cloudStatus={cloudStatus}
-        isExpanded={isAuthBarExpanded}
-        onToggleExpand={() => setIsAuthBarExpanded(!isAuthBarExpanded)}
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        onLogout={handleLogout}
-        onOpenCloudSettings={() => setIsSettingsOpen(true)}
-        onOpenCloudLab={() => setCurrentView('cloudLab')}
-        loading={loadingAuth}
-        errorMsg={authError}
-        successMsg={authSuccess}
-        onClearMessages={() => {
-          setAuthError(null);
-          setAuthSuccess(null);
-        }}
-      />
+  // Return to Home Page when Logo is clicked as explicitly requested
+  const handleGoHome = useCallback(() => {
+    setSelectedCategory('all');
+    setSearchQuery('');
+    setDisplayMode('quad');
+    setQuadPage(0);
+    setIsProfilePopupOpen(false);
+    setIsCartOpen(false);
+    setIsSettingsOpen(false);
+    setIsMessagesOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
-      {/* 2. E-Commerce Store Navigation Bar */}
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-['Cairo'] relative selection:bg-rose-500 selection:text-white overflow-x-hidden">
+      {/* 1. Clean Header: Brand Logo & Name (Returns Home), Cart (السلة), and Unified Hub */}
       <Navbar
         status={cloudStatus}
         user={user}
@@ -314,79 +322,19 @@ export default function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenCart={() => setIsCartOpen(true)}
-        onToggleAuthBar={() => setIsAuthBarExpanded(!isAuthBarExpanded)}
-        onOpenCloudLab={() => setCurrentView('cloudLab')}
+        onOpenUnifiedRoom={() => setIsProfilePopupOpen(true)}
+        onGoHome={handleGoHome}
       />
 
-      {/* 3. Responsive Screen Support Banner */}
-      <div className="w-full bg-white border-b border-slate-200/80 py-1.5 px-4 text-center">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 text-[11px] text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <Smartphone className="w-3.5 h-3.5 text-rose-500" />
-            <span>متوافق تماماً مع جميع الهواتف</span>
-          </span>
-          <span className="hidden sm:flex items-center gap-1.5">
-            <Tablet className="w-3.5 h-3.5 text-indigo-500" />
-            <span>الأجهزة اللوحية</span>
-          </span>
-          <span className="hidden md:flex items-center gap-1.5">
-            <Monitor className="w-3.5 h-3.5 text-emerald-500" />
-            <span>شاشات الحواسيب فائقة الدقة</span>
-          </span>
-        </div>
-      </div>
-
-      {/* 4. Main Body Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {currentView === 'cloudLab' ? (
-          /* Cloud Testing Laboratory View */
-          user ? (
-            <CloudImageTestingPage
-              user={user}
-              cloudStatus={cloudStatus}
-              onLogout={handleLogout}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-              onTestPing={checkCloudHealth}
-              onBackToStore={() => setCurrentView('store')}
-            />
-          ) : (
-            <div className="max-w-md mx-auto text-center py-12 px-6 bg-white border border-slate-200 rounded-3xl shadow-sm space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-                <Shirt className="w-7 h-7" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 font-['Tajawal']">
-                تسجيل الدخول مطلوب لمعمل السحاب
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                يرجى تسجيل الدخول أو إنشاء حساب جديد في الشريط العلوي لتتمكن من رفع صور الاختبارات إلى حاوية Appwrite.
-              </p>
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAuthBarExpanded(true)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer"
-                >
-                  فتح شريط التسجيل
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('store')}
-                  className="px-4 py-2.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 cursor-pointer"
-                >
-                  العودة للمتجر
-                </button>
-              </div>
-            </div>
-          )
-        ) : (
-          /* Primary E-Commerce Store View */
-          <div className="space-y-8">
-            {/* Hero & Category Selection */}
-            <StoreHero
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              categories={categoriesList}
-            />
+      {/* 2. Main Body Content - Focused E-Commerce Store */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        <div className="space-y-6 sm:space-y-8">
+          {/* Hero & Category Selection */}
+          <StoreHero
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            categories={categoriesList}
+          />
 
             {/* Product Catalog Section */}
             <div className="space-y-4">
@@ -403,21 +351,53 @@ export default function App() {
                   </span>
                 </div>
 
-                {searchQuery && (
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span>نتائج البحث عن:</span>
-                    <strong className="text-rose-600">"{searchQuery}"</strong>
+                {/* View Switcher: 4 Products in One Square vs Full Grid */}
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex p-1 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold">
                     <button
-                      onClick={() => setSearchQuery('')}
-                      className="text-slate-400 hover:text-slate-700 underline mr-1 cursor-pointer"
+                      type="button"
+                      onClick={() => setDisplayMode('quad')}
+                      className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+                        displayMode === 'quad'
+                          ? 'bg-white text-rose-600 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                      title="عرض 4 منتجات في مربع واحد يظهر في شاشة واحدة"
                     >
-                      إلغاء البحث
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <span>مربع 4 منتجات</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDisplayMode('grid')}
+                      className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+                        displayMode === 'grid'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                      title="عرض جميع المنتجات في شبكة كاملة"
+                    >
+                      <Grid className="w-3.5 h-3.5" />
+                      <span>شبكة الكل</span>
                     </button>
                   </div>
-                )}
+
+                  {searchQuery && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span>نتائج البحث عن:</span>
+                      <strong className="text-rose-600">"{searchQuery}"</strong>
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="text-slate-400 hover:text-slate-700 underline mr-1 cursor-pointer"
+                      >
+                        إلغاء البحث
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Product Grid */}
+              {/* Product Grid / Quad Display */}
               {filteredProducts.length === 0 ? (
                 <div className="text-center py-16 px-4 bg-white border border-slate-200 rounded-3xl shadow-xs space-y-3">
                   <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
@@ -440,25 +420,142 @@ export default function App() {
                     عرض جميع المنتجات
                   </button>
                 </div>
+              ) : displayMode === 'quad' ? (
+                /* Requested 4-Products in One Square Box appearing in a Single Screen */
+                <div className="max-w-3xl mx-auto space-y-3">
+                  <div className="bg-gradient-to-b from-white to-slate-50/70 border-2 border-slate-200/90 rounded-3xl p-3.5 sm:p-5 shadow-sm space-y-4">
+                    {/* Square Showcase Header */}
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200/70 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-rose-500/10">
+                          ٤
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm sm:text-base font-black text-slate-900 font-['Tajawal']">
+                              مربع العرض الرباعي
+                            </h3>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200">
+                              ٤ منتجات في شاشة واحدة
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            المجموعة {quadPage + 1} من {totalQuadPages} • إجمالي {filteredProducts.length} قطعة
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Quad Navigation Arrows */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          disabled={quadPage === 0}
+                          onClick={() => setQuadPage((p) => Math.max(0, p - 1))}
+                          className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                          title="المجموعة السابقة"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                          <span className="hidden sm:inline">السابق</span>
+                        </button>
+
+                        <span className="text-xs font-bold text-slate-800 px-2 font-mono bg-slate-100 py-1 rounded-lg">
+                          {quadPage + 1} / {totalQuadPages}
+                        </span>
+
+                        <button
+                          type="button"
+                          disabled={quadPage >= totalQuadPages - 1}
+                          onClick={() => setQuadPage((p) => Math.min(totalQuadPages - 1, p + 1))}
+                          className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                          title="المجموعة التالية"
+                        >
+                          <span className="hidden sm:inline">التالي</span>
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 2x2 Square Grid: 4 Products in One Square Box */}
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+                      {currentQuadProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          compact={true}
+                          onSelect={(prod) => setSelectedProductForModal(prod)}
+                          onAddToCart={(prod, size, color) =>
+                            handleAddToCart(prod, size, color, 1)
+                          }
+                          isWishlisted={wishlistIds.includes(product.id)}
+                          onToggleWishlist={handleToggleWishlist}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Square Showcase Footer Controls */}
+                    <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5">
+                        {Array.from({ length: totalQuadPages }).map((_, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setQuadPage(idx)}
+                            className={`transition-all rounded-full cursor-pointer ${
+                              quadPage === idx
+                                ? 'w-6 h-2 bg-rose-600'
+                                : 'w-2 h-2 bg-slate-300 hover:bg-slate-400'
+                            }`}
+                            title={`الانتقال للمجموعة ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-500 hidden sm:inline">
+                          عرض 4 قطع في مربع واحد
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setDisplayMode('grid')}
+                          className="text-rose-600 hover:text-rose-700 text-[11px] font-bold hover:underline cursor-pointer"
+                        >
+                          عرض كل المنتجات في شبكة
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                  {filteredProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onSelect={(prod) => setSelectedProductForModal(prod)}
-                      onAddToCart={(prod, size, color) =>
-                        handleAddToCart(prod, size, color, 1)
-                      }
-                      isWishlisted={wishlistIds.includes(product.id)}
-                      onToggleWishlist={handleToggleWishlist}
-                    />
-                  ))}
+                /* Full Multi-Column Grid Display */
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setDisplayMode('quad')}
+                      className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <span>العودة لعرض 4 منتجات في مربع واحد</span>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    {filteredProducts.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onSelect={(prod) => setSelectedProductForModal(prod)}
+                        onAddToCart={(prod, size, color) =>
+                          handleAddToCart(prod, size, color, 1)
+                        }
+                        isWishlisted={wishlistIds.includes(product.id)}
+                        onToggleWishlist={handleToggleWishlist}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        )}
       </main>
 
       {/* 5. Footer */}
@@ -466,15 +563,20 @@ export default function App() {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="font-black text-slate-900 text-lg font-['Tajawal'] flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleGoHome}
+                className="flex items-center gap-2 cursor-pointer group text-right"
+                title="العودة للصفحة الرئيسية لمتجر فهد"
+              >
+                <span className="font-black text-slate-900 text-lg font-['Tajawal'] flex items-center gap-1.5 group-hover:text-rose-600 transition-colors">
                   <span>فهد</span>
                   <span className="text-xs font-sans text-rose-600 font-black">FAHAD</span>
                 </span>
                 <span className="text-[10px] bg-gradient-to-r from-rose-500 to-indigo-600 text-white px-2 py-0.5 rounded-full font-bold">
                   متجر أزياء وإكسسوارات
                 </span>
-              </div>
+              </button>
               <p className="text-slate-500 leading-relaxed text-[11px]">
                 متجر فهد (FAHAD) للأزياء والإكسسوارات الفاخرة لجميع الفئات، مع نظام نقاط ومكافآت مستمر مع كل عملية شراء وربط سحابي متين عبر Appwrite.
               </p>
@@ -502,17 +604,26 @@ export default function App() {
             </div>
 
             <div className="space-y-2">
-              <h5 className="font-bold text-slate-900">الاتصال بالسحابة</h5>
+              <h5 className="font-bold text-slate-900">الاتصال بالسحابة والرسائل</h5>
               <p className="text-[11px] text-slate-500">
-                النظام متصل بخادم Appwrite Cloud 14 مع حفظ دائم لبيانات التسجيل وعناوين الشحن.
+                النظام متصل بخادم Appwrite Cloud بالمفتاح البرمجي لحفظ الصور والاحتفاظ بكافة رسائل واستفسارات العملاء.
               </p>
-              <button
-                type="button"
-                onClick={() => setIsSettingsOpen(true)}
-                className="text-rose-600 font-bold hover:underline text-xs cursor-pointer block"
-              >
-                إعدادات المشروع وحاوية التخزين
-              </button>
+              <div className="flex flex-col gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsMessagesOpen(true)}
+                  className="text-amber-700 font-bold hover:underline text-xs cursor-pointer text-right flex items-center gap-1"
+                >
+                  <span>✉️ فتح صندوق الرسائل السحابي</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="text-rose-600 font-bold hover:underline text-xs cursor-pointer text-right"
+                >
+                  إعدادات المشروع والمفتاح السحابي
+                </button>
+              </div>
             </div>
           </div>
 
@@ -546,7 +657,7 @@ export default function App() {
         onRemoveItem={handleRemoveCartItem}
         onClearCart={handleClearCart}
         user={user}
-        onOpenAuthBar={() => setIsAuthBarExpanded(true)}
+        onOpenAuthBar={() => setIsProfilePopupOpen(true)}
         onPointsUpdated={handlePointsUpdated}
       />
 
@@ -555,6 +666,35 @@ export default function App() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onConfigUpdated={checkCloudHealth}
+      />
+
+      {/* 9. Customer Messages Retention Modal */}
+      <CustomerMessagesModal
+        isOpen={isMessagesOpen}
+        onClose={() => setIsMessagesOpen(false)}
+        currentUser={user}
+      />
+
+      {/* 10. Unified Customer Room: Profile, Messages, Updates, and Auth */}
+      <CustomerProfilePopup
+        user={user}
+        isOpen={isProfilePopupOpen}
+        onClose={() => setIsProfilePopupOpen(false)}
+        onLogout={() => {
+          handleLogout();
+          setIsProfilePopupOpen(false);
+        }}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        loadingAuth={loadingAuth}
+        authError={authError}
+        authSuccess={authSuccess}
+        onClearMessages={() => {
+          setAuthError(null);
+          setAuthSuccess(null);
+        }}
+        cloudStatus={cloudStatus}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
     </div>
   );

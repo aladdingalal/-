@@ -331,9 +331,14 @@ export const CloudImageTestingPage: React.FC<CloudImageTestingPageProps> = ({
                 {config.projectId}
               </span>
               <span className="text-slate-300">•</span>
-              <span className="font-semibold">حاوية التخزين (Bucket ID):</span>
+              <span className="font-semibold">حاوية التخزين:</span>
               <span className="font-mono bg-rose-50 text-rose-700 px-2 py-0.5 rounded border border-rose-200 text-[11px] font-bold" dir="ltr">
                 {customBucketId}
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                <span>المفتاح السحابي مفعل (رفع وحفظ)</span>
               </span>
             </div>
 

@@ -23,45 +23,30 @@ export const StoreHero: React.FC<StoreHeroProps> = ({
   categories,
 }) => {
   return (
-    <section className="w-full space-y-6">
-      {/* Light RGB Vibrant Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-100 via-sky-50 to-emerald-100 border border-slate-200/90 p-6 sm:p-10 shadow-sm">
+    <section className="w-full space-y-4 sm:space-y-6">
+      {/* Light RGB Vibrant Hero Banner - Compact on Mobile */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-100 via-sky-50 to-emerald-100 border border-slate-200/90 p-4 sm:p-7 lg:p-10 shadow-sm">
         {/* Subtle decorative RGB background blobs */}
         <div className="absolute -top-20 -left-20 w-72 h-72 bg-rose-300/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-sky-300/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-emerald-300/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xs text-xs font-bold text-slate-800">
-            <Flame className="w-4 h-4 text-rose-500 fill-rose-500" />
-            <span>تشكيلة الموسم الجديدة - خصومات تصل إلى 40%</span>
+        <div className="relative z-10 max-w-3xl space-y-2.5 sm:space-y-4 text-right">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/90 backdrop-blur-sm border border-slate-200/80 shadow-xs text-[11px] sm:text-xs font-bold text-slate-800">
+            <Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+            <span>تشكيلة الموسم الجديدة - خصومات حتى 40%</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 font-['Tajawal'] tracking-tight leading-tight">
-            أناقة متجددة لكل العائلة <br />
+          <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-900 font-['Tajawal'] tracking-tight leading-tight">
+            أناقة متجددة لكل العائلة •{' '}
             <span className="bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              ملابس وإكسسوارات فاخرة
+              متجر فهد
             </span>
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
-            اكتشف أحدث صيحات الموضة للرجال، النساء، والأطفال مع تشكيلة منسقة بعناية من الساعات، الحقائب، والأحذية بجودة عالمية وشحن سريع لجميع المدن.
+          <p className="text-[11px] sm:text-xs text-slate-600 max-w-xl leading-relaxed">
+            أحدث صيحات الأزياء للرجال، النساء، والأطفال وإكسسوارات فاخرة بجودة عالمية وشحن سريع.
           </p>
-
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => onSelectCategory('all')}
-              className="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-slate-900/10 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span>تسوق كل المنتجات</span>
-            </button>
-            <div className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm px-3.5 py-2.5 rounded-2xl border border-slate-200">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>ضمان أصالة المنتجات 100%</span>
-            </div>
-          </div>
         </div>
       </div>
 

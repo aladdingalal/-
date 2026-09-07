@@ -31,6 +31,8 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
   const [endpoint, setEndpoint] = useState(currentConfig.endpoint);
   const [projectId, setProjectId] = useState(currentConfig.projectId);
   const [bucketId, setBucketId] = useState(currentConfig.bucketId || 'test-images');
+  const [apiKey, setApiKey] = useState(currentConfig.apiKey || DEFAULT_CONFIG.apiKey || '');
+  const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copiedOrigin, setCopiedOrigin] = useState(false);
 
@@ -42,6 +44,7 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
       endpoint: endpoint.trim(),
       projectId: projectId.trim(),
       bucketId: bucketId.trim() || 'test-images',
+      apiKey: apiKey.trim(),
     });
     setSaved(true);
     onConfigUpdated();
@@ -53,6 +56,7 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
     setEndpoint(def.endpoint);
     setProjectId(def.projectId);
     setBucketId(def.bucketId || 'test-images');
+    setApiKey(def.apiKey || '');
     setSaved(true);
     onConfigUpdated();
     setTimeout(() => setSaved(false), 2000);
@@ -159,6 +163,39 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
               dir="ltr"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
             />
+          </div>
+
+          {/* Cloud API Key */}
+          <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 text-emerald-600" />
+                <span>مصرح للصور والرسائل</span>
+              </span>
+              <label className="font-bold text-xs text-amber-950 flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-amber-600" />
+                <span>المفتاح السحابي (Cloud API Key):</span>
+              </label>
+            </div>
+            <div className="relative" dir="ltr">
+              <input
+                type={showKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="standard_..."
+                className="w-full pr-16 pl-3 py-2 bg-white border border-amber-300 rounded-xl text-slate-900 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(!showKey)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[10px] font-bold text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+              >
+                {showKey ? 'إخفاء' : 'إظهار'}
+              </button>
+            </div>
+            <p className="text-[11px] text-amber-800 leading-relaxed text-right">
+              هذا المفتاح يمنح التطبيق صلاحية رفع الصور إلى السحابة فوراً والاحتفاظ بجميع رسائل واستفسارات العملاء.
+            </p>
           </div>
 
           {/* Buttons */}

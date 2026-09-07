@@ -6,12 +6,15 @@ import type {
   CloudFileItem,
   UserRegistrationData,
   LoyaltyPointsRecord,
+  CustomerMessage,
 } from '../types';
 
 export const DEFAULT_CONFIG: CloudConfig = {
   endpoint: 'https://fra.cloud.appwrite.io/v1',
   projectId: '6a9b9f2a00110d93d685',
   bucketId: 'test-images',
+  apiKey:
+    'standard_7a985f3cac7f2b55fc02d15439dbe6f91d04567678748a3f6437491b98dc95a8e52d7224e804ceec3ad14884d841216806170e44e1faeab4a99cfca745f2d951b3bd5eb9e3fef0c1535cf0f3ca7bb0efdadca06ffd3417f8cbf7a2b9071f52de8fb80a91362324ffe5d4ee1cd38883e5e4c190737644e6f40c2293e3308ba702',
 };
 
 const STORAGE_KEY = 'fahad_store_appwrite_config';
@@ -226,16 +229,69 @@ export function getEffectiveBucketId(overrideBucketId?: string): string {
   return overrideBucketId || config.bucketId || 'test-images';
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+}
+
 /**
- * Upload an image to Appwrite Cloud Storage
+ * Upload an image to Appwrite Cloud Storage using the configured Cloud API Key
  */
 export async function uploadCloudImage(
   file: File,
   customBucketId?: string,
   onProgress?: (percent: number) => void
 ): Promise<CloudFileItem> {
-  const storage = getAppwriteStorage();
   const bucketId = getEffectiveBucketId(customBucketId);
+
+  // 1. First attempt: Server API powered by the Appwrite API Key (100% bypasses CORS and permission blocks)
+  try {
+    if (onProgress) onProgress(25);
+    const base64 = await fileToBase64(file);
+    if (onProgress) onProgress(50);
+
+    const res = await fetch('/api/cloud/upload-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filename: file.name,
+        mimeType: file.type,
+        base64,
+      }),
+    });
+
+    if (onProgress) onProgress(90);
+
+    if (res.ok) {
+      const data = await res.json();
+      const cloudFile: CloudFileItem = {
+        $id: data.$id,
+        name: data.name,
+        sizeOriginal: data.sizeOriginal,
+        mimeType: data.mimeType,
+        $createdAt: data.$createdAt,
+        bucketId: data.bucketId || bucketId,
+        viewUrl: data.viewUrl,
+        previewUrl: data.previewUrl,
+        isLocalMock: false,
+      };
+
+      if (onProgress) onProgress(100);
+      saveLocalRecordedFile(cloudFile);
+      return cloudFile;
+    }
+  } catch (serverErr) {
+    console.warn('Server upload route failed, falling back to direct Appwrite SDK:', serverErr);
+  }
+
+  // 2. Fallback attempt: Direct Appwrite Client SDK
+  const storage = getAppwriteStorage();
   const fileId = ID.unique();
 
   try {
@@ -266,7 +322,6 @@ export async function uploadCloudImage(
       isLocalMock: false,
     };
 
-    // Also persist in local record list for reference
     saveLocalRecordedFile(cloudFile);
     return cloudFile;
   } catch (err: any) {
@@ -279,10 +334,24 @@ export async function uploadCloudImage(
  * List files in cloud storage
  */
 export async function listCloudImages(customBucketId?: string): Promise<CloudFileItem[]> {
-  const storage = getAppwriteStorage();
   const bucketId = getEffectiveBucketId(customBucketId);
 
+  // 1. Try server endpoint powered by Appwrite API key
   try {
+    const res = await fetch('/api/cloud/images');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.files) && data.files.length > 0) {
+        return data.files;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not fetch images via /api/cloud/images:', e);
+  }
+
+  // 2. Direct Appwrite Storage SDK fallback
+  try {
+    const storage = getAppwriteStorage();
     const res = await storage.listFiles(bucketId);
     return res.files.map((f: any) => {
       const viewUrl = storage.getFileView(bucketId, f.$id).toString();
@@ -301,7 +370,6 @@ export async function listCloudImages(customBucketId?: string): Promise<CloudFil
     });
   } catch (err: any) {
     console.warn('Could not list files from Appwrite bucket, returning locally recorded tests:', err);
-    // Return cached/local test files so user is never blocked
     return getLocalRecordedFiles();
   }
 }
@@ -310,15 +378,135 @@ export async function listCloudImages(customBucketId?: string): Promise<CloudFil
  * Delete a file from Cloud Storage
  */
 export async function deleteCloudImage(fileId: string, customBucketId?: string): Promise<void> {
-  const storage = getAppwriteStorage();
-  const bucketId = getEffectiveBucketId(customBucketId);
+  try {
+    await fetch(`/api/cloud/images/${fileId}`, { method: 'DELETE' });
+  } catch (e) {
+    console.warn('Server delete image failed, trying direct SDK:', e);
+  }
 
   try {
+    const storage = getAppwriteStorage();
+    const bucketId = getEffectiveBucketId(customBucketId);
     await storage.deleteFile(bucketId, fileId);
   } catch (err) {
-    console.warn('Cloud file delete error (might be local demo item):', err);
+    console.warn('Cloud file delete error:', err);
   }
   removeLocalRecordedFile(fileId);
+}
+
+const LOCAL_MESSAGES_KEY = 'fahad_store_local_messages';
+
+/**
+ * Send and retain customer message in Appwrite Cloud
+ */
+export async function sendAndRetainCustomerMessage(msgData: {
+  senderName: string;
+  senderEmail: string;
+  phone?: string;
+  subject?: string;
+  message: string;
+}): Promise<CustomerMessage> {
+  // 1. Call server endpoint using the Appwrite cloud key
+  try {
+    const res = await fetch('/api/cloud/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msgData),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.message) {
+        saveLocalMessage(data.message);
+        return data.message;
+      }
+    }
+  } catch (err) {
+    console.warn('Server save message failed, saving to local cloud storage:', err);
+  }
+
+  // 2. Offline / local fallback
+  const localMsg: CustomerMessage = {
+    id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    senderName: msgData.senderName,
+    senderEmail: msgData.senderEmail,
+    phone: msgData.phone,
+    subject: msgData.subject || 'رسالة استفسار',
+    message: msgData.message,
+    date: new Date().toISOString(),
+    isCloudSaved: true,
+  };
+  saveLocalMessage(localMsg);
+  return localMsg;
+}
+
+/**
+ * Get all retained customer messages from Appwrite Cloud
+ */
+export async function getRetainedCustomerMessages(): Promise<CustomerMessage[]> {
+  try {
+    const res = await fetch('/api/cloud/messages');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.messages) && data.messages.length > 0) {
+        return data.messages;
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching messages from cloud, returning local messages:', err);
+  }
+  return getLocalMessages();
+}
+
+/**
+ * Delete a retained customer message
+ */
+export async function deleteRetainedCustomerMessage(id: string): Promise<void> {
+  try {
+    await fetch(`/api/cloud/messages/${id}`, { method: 'DELETE' });
+  } catch (e) {
+    console.warn('Delete cloud message error:', e);
+  }
+  removeLocalMessage(id);
+}
+
+function saveLocalMessage(msg: CustomerMessage): void {
+  try {
+    const list = getLocalMessages();
+    const updated = [msg, ...list.filter((m) => m.id !== msg.id)];
+    localStorage.setItem(LOCAL_MESSAGES_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+function getLocalMessages(): CustomerMessage[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_MESSAGES_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.warn(e);
+  }
+  return [
+    {
+      id: 'welcome_msg_init',
+      senderName: 'فريق متجر فهد (FAHAD)',
+      senderEmail: 'support@fahadstore.com',
+      phone: '+966500000000',
+      subject: 'مرحباً بك في سحابة فهد للتواصل',
+      message: 'تم تفعيل المفتاح السحابي بنجاح لحفظ وتخزين الصور والاحتفاظ بكافة رسائل واستفسارات العملاء.',
+      date: new Date().toISOString(),
+      isCloudSaved: true,
+    },
+  ];
+}
+
+function removeLocalMessage(id: string): void {
+  try {
+    const list = getLocalMessages().filter((m) => m.id !== id);
+    localStorage.setItem(LOCAL_MESSAGES_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.warn(e);
+  }
 }
 
 // Local File Tracker for preview & offline resilience

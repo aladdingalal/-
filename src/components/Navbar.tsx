@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShoppingBag,
-  Heart,
   Search,
   User,
   Sparkles,
-  Cloud,
-  SlidersHorizontal,
-  Shirt,
+  MessageSquare,
+  X,
+  Layers,
 } from 'lucide-react';
 import type { CloudConnectionStatus, UserProfile } from '../types';
 
@@ -19,8 +18,8 @@ interface NavbarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenCart: () => void;
-  onToggleAuthBar: () => void;
-  onOpenCloudLab: () => void;
+  onOpenUnifiedRoom: () => void;
+  onGoHome: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -31,88 +30,111 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
   onSearchChange,
   onOpenCart,
-  onToggleAuthBar,
-  onOpenCloudLab,
+  onOpenUnifiedRoom,
+  onGoHome,
 }) => {
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
   return (
-    <header className="w-full border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-30 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
-        {/* Brand Logo & Name */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-amber-500 to-indigo-600 p-0.5 shadow-md shadow-rose-500/20">
-            <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-rose-600 font-black text-xl font-['Tajawal']">
+    <header className="w-full border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-30 shadow-2xs">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
+        {/* 1. Brand Logo & Name (Clicking returns to Home page as requested) */}
+        <button
+          type="button"
+          onClick={onGoHome}
+          className="flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer group text-right focus:outline-none"
+          title="العودة إلى الصفحة الرئيسية لمتجر فهد"
+        >
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-amber-500 to-indigo-600 p-0.5 shadow-md shadow-rose-500/15 group-hover:scale-105 transition-transform">
+            <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-rose-600 font-black text-lg sm:text-xl font-['Tajawal']">
               ف
             </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-xl sm:text-2xl tracking-tight text-slate-900 font-['Tajawal'] flex items-center gap-1.5">
-                <span>فهد</span>
-                <span className="text-xs sm:text-sm font-black font-sans text-rose-600 tracking-wider">FAHAD</span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="font-black text-lg sm:text-2xl tracking-tight text-slate-900 font-['Tajawal'] group-hover:text-rose-600 transition-colors">
+                فهد
               </span>
-              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500 to-indigo-600 text-white shadow-xs">
-                أزياء وإكسسوارات
+              <span className="text-[11px] sm:text-xs font-black font-sans text-rose-600 tracking-wider">
+                FAHAD
+              </span>
+              <span className="hidden xs:inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200">
+                أزياء
               </span>
             </div>
-            <p className="text-xs text-slate-500 hidden sm:block">
-              متجر فهد للأزياء الراقية لكل الفئات | FAHAD Fashion Store
-            </p>
+            <span className="text-[10px] text-slate-400 font-medium hidden sm:block">
+              الصفحة الرئيسية • متجر الأزياء
+            </span>
           </div>
-        </div>
+        </button>
 
-        {/* Search Bar */}
-        <div className="flex-1 max-w-md hidden md:block">
+        {/* 2. Desktop Search Input */}
+        <div className="flex-1 max-w-sm hidden md:block">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="ابحث عن جاكيت، فستان، ساعة، حذاء، إكسسوارات..."
-              className="w-full pr-10 pl-4 py-2.5 bg-slate-100/90 border border-slate-200 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-xs"
+              placeholder="ابحث في ملابس وإكسسوارات فهد..."
+              className="w-full pr-10 pl-4 py-2 bg-slate-100/90 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Actions & Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Cloud Lab Button */}
+        {/* 3. Actions: Mobile Search Toggle + Unified Room + Cart */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
+          {/* Mobile Search Toggle */}
           <button
             type="button"
-            onClick={onOpenCloudLab}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-            title="معمل رفع الصور السحابية"
+            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="بحث"
           >
-            <Cloud className="w-4 h-4 text-sky-600" />
-            <span>معمل السحاب</span>
+            <Search className="w-4 h-4" />
           </button>
 
-          {/* User Account / Auth Bar Toggle */}
+          {/* Unified Room Button (All Updates, Profile, Messages, and Cloud in One Room) */}
           <button
             type="button"
-            onClick={onToggleAuthBar}
-            className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all cursor-pointer"
-            title="الحساب وتسجيل الدخول"
+            onClick={onOpenUnifiedRoom}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200/90 text-slate-800 text-xs font-bold transition-all cursor-pointer border border-slate-200/80 shadow-2xs"
+            title="غرفة المتجر الموحدة: البروفيل، الرسائل، وآخر التحديثات"
           >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center text-[11px] font-bold">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
               {user ? (user.name ? user.name[0] : 'U') : <User className="w-3.5 h-3.5" />}
             </div>
-            <span className="hidden lg:inline">
-              {user ? (user.name || 'حسابي') : 'تسجيل الدخول'}
-            </span>
+            <div className="flex items-center gap-1">
+              <span className="hidden sm:inline font-bold">
+                {user ? user.name.split(' ')[0] : 'غرفة التحديثات والحساب'}
+              </span>
+              <span className="sm:hidden text-[11px] font-bold">
+                {user ? 'حسابي' : 'الغرفة'}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            </div>
           </button>
 
-          {/* Cart Button */}
+          {/* Cart Button (السلة) */}
           <button
             type="button"
             onClick={onOpenCart}
-            className="relative flex items-center gap-2 p-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-gradient-to-r hover:from-rose-500 hover:to-indigo-600 text-white text-xs font-bold shadow-md shadow-slate-900/10 active:scale-95 transition-all cursor-pointer"
+            className="relative flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-gradient-to-r hover:from-rose-500 hover:to-indigo-600 text-white text-xs font-bold shadow-md shadow-slate-900/10 active:scale-95 transition-all cursor-pointer"
             title="سلة التسوق"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span className="hidden sm:inline">السلة</span>
+            <span className="font-bold">السلة</span>
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white font-bold text-[11px] flex items-center justify-center shadow-md animate-bounce">
+              <span className="w-5 h-5 rounded-full bg-rose-500 text-white font-bold text-[10px] flex items-center justify-center shadow-md animate-bounce">
                 {cartCount}
               </span>
             )}
@@ -120,19 +142,31 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Search input */}
-      <div className="px-4 pb-3 md:hidden">
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="ابحث عن ملابس، ساعات، أحذية..."
-            className="w-full pr-10 pl-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 shadow-xs"
-          />
+      {/* Mobile Search Expandable Bar */}
+      {isMobileSearchOpen && (
+        <div className="px-3 pb-2.5 md:hidden border-t border-slate-100 pt-2 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="ابحث عن ملابس، أحذية، ساعات..."
+              autoFocus
+              className="w-full pr-10 pl-8 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

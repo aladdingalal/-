@@ -2,6 +2,19 @@ export interface CloudConfig {
   endpoint: string;
   projectId: string;
   bucketId?: string;
+  apiKey?: string;
+}
+
+export interface CustomerMessage {
+  id: string;
+  senderName: string;
+  senderEmail: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  date: string;
+  isCloudSaved: boolean;
+  fileId?: string;
 }
 
 export interface CloudFileItem {

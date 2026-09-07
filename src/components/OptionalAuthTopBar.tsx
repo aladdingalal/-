@@ -34,6 +34,7 @@ interface OptionalAuthTopBarProps {
   onLogout: () => void;
   onOpenCloudSettings: () => void;
   onOpenCloudLab: () => void;
+  onOpenProfilePopup?: () => void;
   loading: boolean;
   errorMsg: { text: string; hint?: string } | null;
   successMsg: string | null;
@@ -50,6 +51,7 @@ export const OptionalAuthTopBar: React.FC<OptionalAuthTopBarProps> = ({
   onLogout,
   onOpenCloudSettings,
   onOpenCloudLab,
+  onOpenProfilePopup,
   loading,
   errorMsg,
   successMsg,
@@ -144,6 +146,18 @@ export const OptionalAuthTopBar: React.FC<OptionalAuthTopBarProps> = ({
 
         {/* Left side actions (Clean customer actions, no cloud ping clutter) */}
         <div className="flex items-center gap-2">
+          {user && onOpenProfilePopup && (
+            <button
+              type="button"
+              onClick={onOpenProfilePopup}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 font-black text-xs transition-all shadow-xs hover:opacity-95 cursor-pointer border border-amber-300"
+              title="فتح نافذة الملف الشخصي والرسائل المنبثقة من أعلى الموقع"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+              <span>نافذة الملف والرسائل</span>
+            </button>
+          )}
+
           {/* Toggle Expand Button */}
           <button
             type="button"
