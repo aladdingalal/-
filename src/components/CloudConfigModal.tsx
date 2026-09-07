@@ -67,17 +67,19 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-5 text-right max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-right max-h-[90vh] overflow-y-auto text-slate-800">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-white">
-            <Server className="w-5 h-5 text-rose-400" />
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2 text-slate-900">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center">
+              <Server className="w-4 h-4" />
+            </div>
             <h2 className="text-lg font-bold font-['Tajawal']">إعدادات سحابة Appwrite</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="إغلاق"
           >
             <X className="w-5 h-5" />
@@ -85,53 +87,35 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
         </div>
 
         {/* Note on CORS / Web Platforms */}
-        <div className="p-3.5 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs space-y-2 text-rose-200">
-          <div className="flex items-center gap-2 font-bold text-rose-300">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs space-y-2 text-slate-700">
+          <div className="flex items-center gap-2 font-bold text-rose-700">
             <ShieldAlert className="w-4 h-4 shrink-0" />
             <span>تلميح مهم لربط Appwrite (تخطي حظر CORS):</span>
           </div>
-          <p className="leading-relaxed text-slate-300">
+          <p className="leading-relaxed text-slate-600 text-[11px]">
             للسماح للمتصفح بالاتصال بمشروعك السحابي دون أي قيود، يجب إضافة نطاق هذا الموقع في لوحة تحكم
             Appwrite ضمن <strong>Overview &gt; Web Platforms</strong>:
           </p>
-          <div className="flex items-center justify-between gap-2 p-2 bg-slate-950/80 rounded-lg border border-slate-800" dir="ltr">
-            <span className="font-mono text-xs text-rose-300 truncate">{currentOrigin}</span>
+          <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-xl border border-rose-200" dir="ltr">
+            <span className="font-mono text-xs text-rose-700 font-bold truncate">{currentOrigin}</span>
             <button
               type="button"
               onClick={copyOrigin}
-              className="flex items-center gap-1 text-[11px] px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded transition-colors shrink-0"
+              className="px-2.5 py-1 text-xs rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 flex items-center gap-1 font-bold shrink-0 transition-colors cursor-pointer"
             >
-              {copiedOrigin ? (
-                <>
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>تم النسخ</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>نسخ النطاق</span>
-                </>
-              )}
+              <Copy className="w-3.5 h-3.5" />
+              <span>{copiedOrigin ? 'تم النسخ' : 'نسخ النطاق'}</span>
             </button>
           </div>
         </div>
 
-        {/* Social Auth Guide */}
-        <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs space-y-1.5 text-slate-300">
-          <div className="flex items-center gap-1.5 font-bold text-indigo-300">
-            <Info className="w-4 h-4 text-indigo-400 shrink-0" />
-            <span>تفعيل تسجيل الدخول بحسابات التواصل (OAuth):</span>
-          </div>
-          <p className="leading-relaxed text-slate-400">
-            يدعم النظام تسجيل الدخول عبر Google وDiscord وGitHub وFacebook. لتفعيل أي منها، افتح لوحة تحكم Appwrite لمشروعك &gt; <strong>Auth &gt; Settings &gt; OAuth2 Providers</strong> وفعّل المزود وضع مفاتيحه.
-          </p>
-        </div>
-
-        {/* Settings Form */}
+        {/* Form */}
         <form onSubmit={handleSave} className="space-y-4 text-xs">
+          {/* Endpoint */}
           <div>
-            <label className="block font-semibold text-slate-300 mb-1">
-              عنوان الخادم السحابي (Endpoint URL):
+            <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-sky-500" />
+              <span>رابط نقطة النهاية (Appwrite Endpoint):</span>
             </label>
             <input
               type="url"
@@ -140,13 +124,15 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
               onChange={(e) => setEndpoint(e.target.value)}
               placeholder="https://fra.cloud.appwrite.io/v1"
               dir="ltr"
-              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono focus:border-rose-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
             />
           </div>
 
+          {/* Project ID */}
           <div>
-            <label className="block font-semibold text-slate-300 mb-1">
-              معرف المشروع (Project ID):
+            <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+              <Key className="w-3.5 h-3.5 text-emerald-500" />
+              <span>معرّف المشروع السحابي (Project ID):</span>
             </label>
             <input
               type="text"
@@ -155,39 +141,32 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
               onChange={(e) => setProjectId(e.target.value)}
               placeholder="6a9b9f2a00110d93d685"
               dir="ltr"
-              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono focus:border-rose-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
             />
           </div>
 
+          {/* Storage Bucket ID */}
           <div>
-            <label className="block font-semibold text-slate-300 mb-1">
-              حاوية التخزين لاختبارات الصور (Storage Bucket ID):
+            <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+              <Server className="w-3.5 h-3.5 text-indigo-500" />
+              <span>معرّف حاوية التخزين (Storage Bucket ID):</span>
             </label>
             <input
               type="text"
-              required
               value={bucketId}
               onChange={(e) => setBucketId(e.target.value)}
               placeholder="test-images"
               dir="ltr"
-              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono focus:border-rose-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white"
             />
-            <p className="text-[10px] text-slate-400 mt-1">
-              يمكنك إنشاء هذه الحاوية في Appwrite Cloud &gt; Storage &gt; Create Bucket وإعطائها صلاحية Any أو Users.
-            </p>
           </div>
 
-          {saved && (
-            <p className="text-emerald-400 font-bold text-xs text-center">
-              ✓ تم حفظ الإعدادات وتحديث عميل Appwrite بنجاح!
-            </p>
-          )}
-
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800">
+          {/* Buttons */}
+          <div className="flex items-center justify-between pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={handleReset}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              className="px-3.5 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>استعادة الافتراضي</span>
@@ -197,15 +176,16 @@ export const CloudConfigModal: React.FC<CloudConfigModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-slate-300 hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
               >
                 إلغاء
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold transition-all shadow-md shadow-rose-600/20"
+                className="px-6 py-2.5 bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold rounded-xl shadow-md shadow-rose-500/20 hover:opacity-95 text-xs transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                حفظ الإعدادات
+                {saved && <CheckCircle className="w-4 h-4 text-white" />}
+                <span>{saved ? 'تم الحفظ بنجاح' : 'حفظ الإعدادات'}</span>
               </button>
             </div>
           </div>

@@ -1,5 +1,12 @@
 import { Client, Account, ID, OAuthProvider, Storage } from 'appwrite';
-import type { CloudConfig, UserProfile, CloudConnectionStatus, CloudFileItem } from '../types';
+import type {
+  CloudConfig,
+  UserProfile,
+  CloudConnectionStatus,
+  CloudFileItem,
+  UserRegistrationData,
+  LoyaltyPointsRecord,
+} from '../types';
 
 export const DEFAULT_CONFIG: CloudConfig = {
   endpoint: 'https://fra.cloud.appwrite.io/v1',
@@ -7,8 +14,144 @@ export const DEFAULT_CONFIG: CloudConfig = {
   bucketId: 'test-images',
 };
 
-const STORAGE_KEY = 'games_farist_appwrite_config';
-const LOCAL_FILES_KEY = 'games_farist_local_test_files';
+const STORAGE_KEY = 'fahad_store_appwrite_config';
+const LOCAL_FILES_KEY = 'fahad_store_local_test_files';
+const USER_PROFILES_KEY = 'fahad_store_user_profiles_db';
+const ACTIVE_USER_KEY = 'fahad_store_active_user_cache';
+const POINTS_KEY_PREFIX = 'fahad_store_points_';
+const POINTS_HISTORY_PREFIX = 'fahad_store_points_hist_';
+
+// Fallback lookup from previous storage keys if present
+function migrateStorageKey(newKey: string, oldKey: string): void {
+  try {
+    if (!localStorage.getItem(newKey) && localStorage.getItem(oldKey)) {
+      const oldVal = localStorage.getItem(oldKey);
+      if (oldVal) localStorage.setItem(newKey, oldVal);
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+}
+migrateStorageKey(STORAGE_KEY, 'games_farist_appwrite_config');
+migrateStorageKey(LOCAL_FILES_KEY, 'games_farist_local_test_files');
+migrateStorageKey(USER_PROFILES_KEY, 'games_farist_user_profiles_db');
+migrateStorageKey(ACTIVE_USER_KEY, 'games_farist_active_user_cache');
+
+export function getUserPoints(emailOrId: string): number {
+  if (!emailOrId) return 0;
+  const key = `${POINTS_KEY_PREFIX}${emailOrId.toLowerCase().trim()}`;
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw !== null) {
+      return parseInt(raw, 10) || 0;
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+  // New users start with 50 welcome loyalty points!
+  return 50;
+}
+
+export function addLoyaltyPoints(
+  emailOrId: string,
+  pointsToAdd: number,
+  reason: string = 'عملية شراء من متجر فهد'
+): { newTotal: number; earned: number } {
+  if (!emailOrId || pointsToAdd <= 0) {
+    return { newTotal: getUserPoints(emailOrId), earned: 0 };
+  }
+  const cleanKey = emailOrId.toLowerCase().trim();
+  const current = getUserPoints(cleanKey);
+  const updated = current + pointsToAdd;
+
+  try {
+    localStorage.setItem(`${POINTS_KEY_PREFIX}${cleanKey}`, updated.toString());
+
+    // Update history log
+    const histKey = `${POINTS_HISTORY_PREFIX}${cleanKey}`;
+    const rawHist = localStorage.getItem(histKey);
+    const history: LoyaltyPointsRecord[] = rawHist ? JSON.parse(rawHist) : [];
+    history.unshift({
+      id: `pt_${Date.now()}`,
+      points: pointsToAdd,
+      totalAfter: updated,
+      reason,
+      date: new Date().toLocaleDateString('ar-SA', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    });
+    localStorage.setItem(histKey, JSON.stringify(history.slice(0, 30)));
+
+    // Also update cached active user if matches
+    const cachedUser = localStorage.getItem(ACTIVE_USER_KEY);
+    if (cachedUser) {
+      const parsed = JSON.parse(cachedUser);
+      if (parsed.email?.toLowerCase().trim() === cleanKey || parsed.$id === cleanKey) {
+        parsed.loyaltyPoints = updated;
+        localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(parsed));
+      }
+    }
+  } catch (e) {
+    console.warn('Error saving points:', e);
+  }
+
+  return { newTotal: updated, earned: pointsToAdd };
+}
+
+export function getPointsHistory(emailOrId: string): LoyaltyPointsRecord[] {
+  if (!emailOrId) return [];
+  const cleanKey = emailOrId.toLowerCase().trim();
+  const histKey = `${POINTS_HISTORY_PREFIX}${cleanKey}`;
+  try {
+    const rawHist = localStorage.getItem(histKey);
+    if (rawHist) {
+      return JSON.parse(rawHist);
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+  return [
+    {
+      id: 'welcome',
+      points: 50,
+      totalAfter: 50,
+      reason: 'هدية ترحيبية بالانضمام إلى متجر فهد (FAHAD)',
+      date: 'عند التسجيل',
+    },
+  ];
+}
+
+export function getSavedUserProfile(email: string): Partial<UserProfile> | null {
+  try {
+    const raw = localStorage.getItem(USER_PROFILES_KEY);
+    if (raw) {
+      const db = JSON.parse(raw);
+      return db[email.toLowerCase().trim()] || null;
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+  return null;
+}
+
+export function saveUserProfileMeta(email: string, meta: Partial<UserProfile>): void {
+  try {
+    const raw = localStorage.getItem(USER_PROFILES_KEY);
+    const db = raw ? JSON.parse(raw) : {};
+    const key = email.toLowerCase().trim();
+    db[key] = {
+      ...(db[key] || {}),
+      ...meta,
+    };
+    localStorage.setItem(USER_PROFILES_KEY, JSON.stringify(db));
+  } catch (e) {
+    console.warn(e);
+  }
+}
 
 export function getStoredConfig(): CloudConfig {
   try {
@@ -274,36 +417,88 @@ export async function testCloudConnection(): Promise<CloudConnectionStatus> {
 }
 
 /**
- * Register a new user
+ * Register a new user with extended profile data
  */
-export async function registerNewUser(name: string, email: string, pass: string): Promise<UserProfile> {
+export async function registerNewUser(
+  name: string,
+  email: string,
+  pass: string,
+  extraData?: {
+    phone?: string;
+    residenceCountry?: string;
+    currentCity?: string;
+    detailedAddress?: string;
+  }
+): Promise<UserProfile> {
   const account = getAppwriteAccount();
   const uniqueId = ID.unique();
-  const user = await account.create(uniqueId, email, pass, name);
-  return user as unknown as UserProfile;
+  const cleanEmail = email.toLowerCase().trim();
+
+  let user: any;
+  try {
+    user = await account.create(uniqueId, cleanEmail, pass, name.trim());
+  } catch (err) {
+    throw err;
+  }
+
+  const profile: UserProfile = {
+    $id: user.$id || uniqueId,
+    name: name.trim(),
+    email: cleanEmail,
+    registration: new Date().toISOString(),
+    status: true,
+    emailVerification: false,
+    phone: extraData?.phone?.trim() || '',
+    residenceCountry: extraData?.residenceCountry?.trim() || '',
+    currentCity: extraData?.currentCity?.trim() || '',
+    detailedAddress: extraData?.detailedAddress?.trim() || '',
+    loyaltyPoints: getUserPoints(cleanEmail),
+  };
+
+  // Save metadata
+  saveUserProfileMeta(cleanEmail, profile);
+  localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(profile));
+
+  // Automatically log in to establish session
+  try {
+    await account.createEmailPasswordSession(cleanEmail, pass);
+  } catch (loginErr) {
+    console.warn('Auto login after registration notification:', loginErr);
+  }
+
+  return profile;
 }
 
 /**
  * Sign in with email and password
  */
-export async function loginWithEmail(email: string, pass: string) {
+export async function loginWithEmail(email: string, pass: string): Promise<UserProfile> {
   const account = getAppwriteAccount();
-  return await account.createEmailPasswordSession(email, pass);
-}
-
-/**
- * Social OAuth login
- */
-export function startOAuthLogin(provider: string) {
-  const account = getAppwriteAccount();
-  const currentUrl = window.location.href.split('#')[0];
+  const cleanEmail = email.toLowerCase().trim();
   
-  // Appwrite OAuth redirect
-  return account.createOAuth2Session(
-    provider as any,
-    currentUrl, // redirect back here on success
-    currentUrl  // redirect back here on failure
-  );
+  await account.createEmailPasswordSession(cleanEmail, pass);
+  
+  // Retrieve account
+  const appwriteUser = await account.get();
+  const savedMeta = getSavedUserProfile(cleanEmail) || {};
+  
+  const userProfile: UserProfile = {
+    $id: appwriteUser.$id,
+    name: appwriteUser.name || savedMeta.name || cleanEmail.split('@')[0],
+    email: appwriteUser.email || cleanEmail,
+    registration: appwriteUser.registration || savedMeta.registration || new Date().toISOString(),
+    status: appwriteUser.status ?? true,
+    emailVerification: appwriteUser.emailVerification ?? false,
+    phone: savedMeta.phone || appwriteUser.phone || '',
+    residenceCountry: savedMeta.residenceCountry || '',
+    currentCity: savedMeta.currentCity || '',
+    detailedAddress: savedMeta.detailedAddress || '',
+    loyaltyPoints: getUserPoints(cleanEmail),
+  };
+
+  saveUserProfileMeta(cleanEmail, userProfile);
+  localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(userProfile));
+  return userProfile;
 }
 
 /**
@@ -313,9 +508,39 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
   try {
     const account = getAppwriteAccount();
     const user = await account.get();
-    return user as unknown as UserProfile;
+    const cleanEmail = (user.email || '').toLowerCase().trim();
+    const savedMeta = getSavedUserProfile(cleanEmail) || {};
+
+    const profile: UserProfile = {
+      $id: user.$id,
+      name: user.name || savedMeta.name || 'مستخدم مسجل',
+      email: user.email,
+      registration: user.registration,
+      status: user.status,
+      emailVerification: user.emailVerification,
+      phone: savedMeta.phone || user.phone || '',
+      residenceCountry: savedMeta.residenceCountry || '',
+      currentCity: savedMeta.currentCity || '',
+      detailedAddress: savedMeta.detailedAddress || '',
+      accessedAt: user.accessedAt,
+      loyaltyPoints: getUserPoints(cleanEmail),
+    };
+    localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(profile));
+    return profile;
   } catch (err: any) {
-    // Not logged in or session expired
+    // Check if there is cached active user profile
+    try {
+      const cached = localStorage.getItem(ACTIVE_USER_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.email) {
+          parsed.loyaltyPoints = getUserPoints(parsed.email);
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
     return null;
   }
 }
@@ -324,8 +549,13 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
  * Sign out current session
  */
 export async function logoutCurrentSession(): Promise<void> {
-  const account = getAppwriteAccount();
-  await account.deleteSession('current');
+  try {
+    const account = getAppwriteAccount();
+    await account.deleteSession('current');
+  } catch (err) {
+    console.warn('Logout warning:', err);
+  }
+  localStorage.removeItem(ACTIVE_USER_KEY);
 }
 
 /**

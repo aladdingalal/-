@@ -16,6 +16,14 @@ export interface CloudFileItem {
   isLocalMock?: boolean;
 }
 
+export interface LoyaltyPointsRecord {
+  id: string;
+  points: number;
+  totalAfter: number;
+  reason: string;
+  date: string;
+}
+
 export interface UserProfile {
   $id: string;
   name: string;
@@ -24,7 +32,54 @@ export interface UserProfile {
   status: boolean;
   emailVerification: boolean;
   phone?: string;
+  residenceCountry?: string; // بلد الإقامة
+  currentCity?: string; // المدينة الحالية
+  detailedAddress?: string; // العنوان التفصيلي
   accessedAt?: string;
+  loyaltyPoints?: number; // نقاط المكافآت والولاء مع كل عملية شراء
+}
+
+export interface UserRegistrationData {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  residenceCountry: string;
+  currentCity: string;
+  detailedAddress: string;
+}
+
+export type ProductCategory = 'all' | 'men' | 'women' | 'kids' | 'accessories' | 'shoes';
+
+export interface ProductColor {
+  name: string;
+  hex: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  category: ProductCategory;
+  categoryName: string;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  reviewsCount: number;
+  image: string;
+  description: string;
+  sizes: string[];
+  colors: ProductColor[];
+  tag?: string;
+  tagColor?: string;
+  inStock: boolean;
+}
+
+export interface CartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+  selectedSize: string;
+  selectedColor: string;
 }
 
 export interface CloudSession {
