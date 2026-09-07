@@ -13,8 +13,8 @@ import {
   CreditCard,
   Award,
 } from 'lucide-react';
-import type { CartItem, UserProfile } from '../types';
-import { addLoyaltyPoints } from '../services/appwrite';
+import type { CartItem, UserProfile, CustomerOrder } from '../types';
+import { addLoyaltyPoints, createCustomerOrder } from '../services/appwrite';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -26,6 +26,7 @@ interface CartDrawerProps {
   user: UserProfile | null;
   onOpenAuthBar: () => void;
   onPointsUpdated?: () => void;
+  onViewOrdersInProfile?: () => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -38,10 +39,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   user,
   onOpenAuthBar,
   onPointsUpdated,
+  onViewOrdersInProfile,
 }) => {
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [earnedPointsThisOrder, setEarnedPointsThisOrder] = useState<number>(0);
+  const [placedOrder, setPlacedOrder] = useState<CustomerOrder | null>(null);
+
+  // Guest delivery info if not logged in
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [guestCity, setGuestCity] = useState('الرياض');
+  const [guestAddress, setGuestAddress] = useState('');
 
   if (!isOpen) return null;
 
@@ -52,12 +61,36 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const shipping = subtotal > 200 || items.length === 0 ? 0 : 25;
   const total = subtotal + shipping;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     setIsSubmitting(true);
     const earned = Math.max(10, Math.round(total * 0.1));
     setEarnedPointsThisOrder(earned);
 
-    setTimeout(() => {
+    try {
+      const order = await createCustomerOrder({
+        customerName: user?.name || guestName || 'عميل المتجر',
+        customerEmail: user?.email || (guestPhone ? `${guestPhone}@fahadstore.com` : 'customer@fahadstore.com'),
+        phone: user?.phone || guestPhone || '',
+        city: user?.currentCity || guestCity || 'الرياض',
+        address: user?.detailedAddress || guestAddress || 'حي النرجس، الرياض',
+        items: items.map((item) => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          size: item.selectedSize,
+          color: item.selectedColor,
+          image: item.product.image,
+        })),
+        subtotal,
+        shipping,
+        total,
+        pointsEarned: earned,
+        notes: 'طلب تسوق إلكتروني من متجر فهد',
+      });
+
+      setPlacedOrder(order);
+
       if (user?.email) {
         addLoyaltyPoints(
           user.email,
@@ -69,10 +102,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         }
       }
 
-      setIsSubmitting(false);
       setOrderCompleted(true);
       onClearCart();
-    }, 1200);
+    } catch (err) {
+      console.error('Checkout error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -127,27 +163,54 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </span>
               </div>
 
-              {user?.detailedAddress && (
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-right text-xs space-y-1">
-                  <p className="font-bold text-slate-800">
-                    العميل: {user.name} ({user.phone || 'هاتف مسجل'})
-                  </p>
-                  <p className="text-slate-600">
-                    الوجهة: {user.detailedAddress} - {user.currentCity}
+              {/* Placed Order Details & Tracking */}
+              {placedOrder && (
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-right text-xs space-y-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <span className="font-bold text-slate-800">رقم الطلب المعتمد:</span>
+                    <span className="font-mono font-bold text-rose-600 dir-ltr">{placedOrder.id}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600">
+                    <span>حالة الطلب:</span>
+                    <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-[11px]">
+                      قيد التجهيز من الإدارة
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600">
+                    <span>وجهة التوصيل:</span>
+                    <span className="text-slate-800 font-medium">{placedOrder.city} - {placedOrder.address}</span>
+                  </div>
+                  <p className="text-[11px] text-emerald-700 font-medium">
+                    ✓ تم إرسال وحفظ الطلب في حساب إدارة المتجر بنجاح.
                   </p>
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  setOrderCompleted(false);
-                  onClose();
-                }}
-                className="px-6 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl shadow-md hover:bg-slate-800 transition-all cursor-pointer"
-              >
-                العودة إلى المتجر
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                {onViewOrdersInProfile && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOrderCompleted(false);
+                      onClose();
+                      onViewOrdersInProfile();
+                    }}
+                    className="flex-1 py-2.5 px-4 bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:opacity-95 transition-all cursor-pointer"
+                  >
+                    عرض ومتابعة الطلب في الملف الشخصي
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrderCompleted(false);
+                    onClose();
+                  }}
+                  className="py-2.5 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  العودة للمتجر
+                </button>
+              </div>
             </div>
           ) : items.length === 0 ? (
             <div className="text-center py-16 px-4 space-y-3">

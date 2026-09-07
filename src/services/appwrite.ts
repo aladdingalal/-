@@ -7,6 +7,7 @@ import type {
   UserRegistrationData,
   LoyaltyPointsRecord,
   CustomerMessage,
+  CustomerOrder,
 } from '../types';
 
 export const DEFAULT_CONFIG: CloudConfig = {
@@ -396,22 +397,34 @@ export async function deleteCloudImage(fileId: string, customBucketId?: string):
 
 const LOCAL_MESSAGES_KEY = 'fahad_store_local_messages';
 
+export const ADMIN_EMAIL = 'Alaa.galal.abas1@gmail.com';
+export const isAdminEmail = (email?: string): boolean =>
+  (email || '').toLowerCase().trim() === ADMIN_EMAIL.toLowerCase();
+
+const LOCAL_ORDERS_KEY = 'fahad_store_customer_orders';
+
 /**
  * Send and retain customer message in Appwrite Cloud
  */
 export async function sendAndRetainCustomerMessage(msgData: {
   senderName: string;
   senderEmail: string;
+  recipientEmail?: string;
   phone?: string;
   subject?: string;
   message: string;
 }): Promise<CustomerMessage> {
+  const payload = {
+    ...msgData,
+    recipientEmail: msgData.recipientEmail || ADMIN_EMAIL,
+  };
+
   // 1. Call server endpoint using the Appwrite cloud key
   try {
     const res = await fetch('/api/cloud/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(msgData),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
       const data = await res.json();
@@ -429,11 +442,13 @@ export async function sendAndRetainCustomerMessage(msgData: {
     id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     senderName: msgData.senderName,
     senderEmail: msgData.senderEmail,
+    recipientEmail: ADMIN_EMAIL,
     phone: msgData.phone,
     subject: msgData.subject || 'رسالة استفسار',
     message: msgData.message,
     date: new Date().toISOString(),
     isCloudSaved: true,
+    status: 'unread',
   };
   saveLocalMessage(localMsg);
   return localMsg;
@@ -442,19 +457,56 @@ export async function sendAndRetainCustomerMessage(msgData: {
 /**
  * Get all retained customer messages from Appwrite Cloud
  */
-export async function getRetainedCustomerMessages(): Promise<CustomerMessage[]> {
+export async function getRetainedCustomerMessages(userEmail?: string): Promise<CustomerMessage[]> {
   try {
-    const res = await fetch('/api/cloud/messages');
+    const url = userEmail ? `/api/cloud/messages?email=${encodeURIComponent(userEmail)}` : '/api/cloud/messages';
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.messages) && data.messages.length > 0) {
+        // Update local cache
+        data.messages.forEach((m: CustomerMessage) => saveLocalMessage(m));
         return data.messages;
       }
     }
   } catch (err) {
     console.warn('Error fetching messages from cloud, returning local messages:', err);
   }
-  return getLocalMessages();
+  return getLocalMessages(userEmail);
+}
+
+/**
+ * Admin reply to customer message
+ */
+export async function replyCustomerMessage(messageId: string, replyText: string): Promise<CustomerMessage | null> {
+  try {
+    const res = await fetch(`/api/cloud/messages/${messageId}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ replyText }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.message) {
+        saveLocalMessage(data.message);
+        return data.message;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to send reply to server:', e);
+  }
+
+  // Update local
+  const list = getLocalMessages();
+  const idx = list.findIndex((m) => m.id === messageId);
+  if (idx !== -1) {
+    list[idx].reply = replyText;
+    list[idx].replyDate = new Date().toISOString();
+    list[idx].status = 'replied';
+    localStorage.setItem(LOCAL_MESSAGES_KEY, JSON.stringify(list));
+    return list[idx];
+  }
+  return null;
 }
 
 /**
@@ -479,25 +531,40 @@ function saveLocalMessage(msg: CustomerMessage): void {
   }
 }
 
-function getLocalMessages(): CustomerMessage[] {
+function getLocalMessages(userEmail?: string): CustomerMessage[] {
+  let list: CustomerMessage[] = [];
   try {
     const raw = localStorage.getItem(LOCAL_MESSAGES_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) list = JSON.parse(raw);
   } catch (e) {
     console.warn(e);
   }
-  return [
-    {
-      id: 'welcome_msg_init',
-      senderName: 'فريق متجر فهد (FAHAD)',
-      senderEmail: 'support@fahadstore.com',
-      phone: '+966500000000',
-      subject: 'مرحباً بك في سحابة فهد للتواصل',
-      message: 'تم تفعيل المفتاح السحابي بنجاح لحفظ وتخزين الصور والاحتفاظ بكافة رسائل واستفسارات العملاء.',
-      date: new Date().toISOString(),
-      isCloudSaved: true,
-    },
-  ];
+  if (!list.length) {
+    list = [
+      {
+        id: 'welcome_msg_init',
+        senderName: 'فريق خدمة عملاء متجر فهد',
+        senderEmail: 'support@fahadstore.com',
+        recipientEmail: ADMIN_EMAIL,
+        phone: '+966500000000',
+        subject: 'مرحباً بك في متجر فهد للأزياء',
+        message: 'تم تفعيل حسابك ونظام المراسلات المباشرة مع إدارة المتجر لحفظ طلباتك واستفساراتك بصورة آمنة وموثقة.',
+        date: new Date().toISOString(),
+        isCloudSaved: true,
+        status: 'read',
+      },
+    ];
+  }
+
+  if (userEmail && !isAdminEmail(userEmail)) {
+    const normalized = userEmail.toLowerCase().trim();
+    return list.filter(
+      (m) =>
+        (m.senderEmail || '').toLowerCase().trim() === normalized ||
+        (m.recipientEmail || '').toLowerCase().trim() === normalized
+    );
+  }
+  return list;
 }
 
 function removeLocalMessage(id: string): void {
@@ -507,6 +574,194 @@ function removeLocalMessage(id: string): void {
   } catch (e) {
     console.warn(e);
   }
+}
+
+// ----------------------------------------------------
+// Customer Orders APIs (Cloud & Local Sync)
+// ----------------------------------------------------
+
+/**
+ * Submit and retain new customer order
+ */
+export async function createCustomerOrder(orderData: {
+  customerName: string;
+  customerEmail: string;
+  phone?: string;
+  city?: string;
+  address?: string;
+  items: any[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  notes?: string;
+  pointsEarned?: number;
+}): Promise<CustomerOrder> {
+  const payload = {
+    ...orderData,
+    recipientAdminEmail: ADMIN_EMAIL,
+  };
+
+  try {
+    const res = await fetch('/api/cloud/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.order) {
+        saveLocalOrder(data.order);
+        return data.order;
+      }
+    }
+  } catch (err) {
+    console.warn('Server save order failed, falling back to local storage:', err);
+  }
+
+  // Fallback local order
+  const localOrder: CustomerOrder = {
+    id: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    customerName: orderData.customerName,
+    customerEmail: orderData.customerEmail,
+    phone: orderData.phone,
+    city: orderData.city,
+    address: orderData.address,
+    items: orderData.items,
+    subtotal: orderData.subtotal,
+    shipping: orderData.shipping,
+    total: orderData.total,
+    date: new Date().toISOString(),
+    status: 'processing',
+    recipientAdminEmail: ADMIN_EMAIL,
+    pointsEarned: orderData.pointsEarned || 0,
+    notes: orderData.notes,
+    isCloudSaved: true,
+  };
+  saveLocalOrder(localOrder);
+  return localOrder;
+}
+
+/**
+ * Get customer orders from cloud
+ */
+export async function getCustomerOrders(userEmail?: string): Promise<CustomerOrder[]> {
+  try {
+    const url = userEmail ? `/api/cloud/orders?email=${encodeURIComponent(userEmail)}` : '/api/cloud/orders';
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.orders) && data.orders.length > 0) {
+        data.orders.forEach((o: CustomerOrder) => saveLocalOrder(o));
+        return data.orders;
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching orders from cloud, returning local orders:', err);
+  }
+  return getLocalOrders(userEmail);
+}
+
+/**
+ * Update order status (Admin)
+ */
+export async function updateCustomerOrderStatus(
+  orderId: string,
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+): Promise<CustomerOrder | null> {
+  try {
+    const res = await fetch(`/api/cloud/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.order) {
+        saveLocalOrder(data.order);
+        return data.order;
+      }
+    }
+  } catch (e) {
+    console.warn('Error updating order status on cloud:', e);
+  }
+
+  const list = getLocalOrders();
+  const idx = list.findIndex((o) => o.id === orderId);
+  if (idx !== -1) {
+    list[idx].status = status;
+    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(list));
+    return list[idx];
+  }
+  return null;
+}
+
+export async function deleteCustomerOrder(orderId: string): Promise<boolean> {
+  try {
+    const list = getLocalOrders();
+    const filtered = list.filter((o) => o.id !== orderId);
+    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(filtered));
+    return true;
+  } catch (e) {
+    console.warn(e);
+    return false;
+  }
+}
+
+function saveLocalOrder(order: CustomerOrder): void {
+  try {
+    const list = getLocalOrders();
+    const updated = [order, ...list.filter((o) => o.id !== order.id)];
+    localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+function getLocalOrders(userEmail?: string): CustomerOrder[] {
+  let list: CustomerOrder[] = [];
+  try {
+    const raw = localStorage.getItem(LOCAL_ORDERS_KEY);
+    if (raw) list = JSON.parse(raw);
+  } catch (e) {
+    console.warn(e);
+  }
+
+  if (!list.length) {
+    list = [
+      {
+        id: 'ord_demo_101',
+        customerName: 'فهد العتيبي',
+        customerEmail: 'customer@fahadstore.com',
+        phone: '+966551234567',
+        city: 'الرياض',
+        address: 'حي النخيل، شارع التخصصي',
+        items: [
+          {
+            productId: 'm1',
+            productName: 'بدلة رجالية كلاسيكية إيطالية',
+            price: 890,
+            quantity: 1,
+            size: 'L',
+            color: 'كحلي داكن',
+          },
+        ],
+        subtotal: 890,
+        shipping: 0,
+        total: 890,
+        date: new Date(Date.now() - 86400000).toISOString(),
+        status: 'processing',
+        recipientAdminEmail: ADMIN_EMAIL,
+        pointsEarned: 89,
+        isCloudSaved: true,
+      },
+    ];
+  }
+
+  if (userEmail && !isAdminEmail(userEmail)) {
+    const normalized = userEmail.toLowerCase().trim();
+    return list.filter((o) => (o.customerEmail || '').toLowerCase().trim() === normalized);
+  }
+  return list;
 }
 
 // Local File Tracker for preview & offline resilience

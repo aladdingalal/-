@@ -9,12 +9,45 @@ export interface CustomerMessage {
   id: string;
   senderName: string;
   senderEmail: string;
+  recipientEmail?: string;
   phone?: string;
   subject: string;
   message: string;
   date: string;
   isCloudSaved: boolean;
   fileId?: string;
+  reply?: string;
+  replyDate?: string;
+  status?: 'unread' | 'read' | 'replied';
+}
+
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  price: number;
+  quantity: number;
+  size?: string;
+  color?: string;
+  image?: string;
+}
+
+export interface CustomerOrder {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  phone?: string;
+  city?: string;
+  address?: string;
+  items: OrderItem[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  date: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  recipientAdminEmail?: string;
+  pointsEarned?: number;
+  notes?: string;
+  isCloudSaved?: boolean;
 }
 
 export interface CloudFileItem {

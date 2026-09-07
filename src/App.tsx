@@ -7,6 +7,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { CloudConfigModal } from './components/CloudConfigModal';
 import { CustomerMessagesModal } from './components/CustomerMessagesModal';
 import { CustomerProfilePopup } from './components/CustomerProfilePopup';
+import { ProfilePage } from './components/ProfilePage';
 import { CategoryQuadSection } from './components/CategoryQuadSection';
 import { DedicatedCategoryView } from './components/DedicatedCategoryView';
 import { INITIAL_PRODUCTS } from './data/products';
@@ -41,6 +42,8 @@ import {
 
 export default function App() {
   // Navigation & Modal State
+  const [currentView, setCurrentView] = useState<'store' | 'profile'>('store');
+  const [profileInitialTab, setProfileInitialTab] = useState<'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages' | undefined>(undefined);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
@@ -134,7 +137,7 @@ export default function App() {
       const loggedProfile = await loginWithEmail(email, pass);
       setUser(loggedProfile);
       setAuthSuccess('تم تسجيل الدخول بنجاح! مرحباً بك في متجر فهد (FAHAD).');
-      setIsProfilePopupOpen(true);
+      setCurrentView('profile');
     } catch (error: any) {
       console.error('Login error:', error);
       const translated = translateAppwriteError(error);
@@ -167,7 +170,7 @@ export default function App() {
       );
       setUser(newProfile);
       setAuthSuccess('تم إنشاء الحساب وحفظ بيانات الإقامة والعنوان بنجاح في السحابة!');
-      setIsProfilePopupOpen(true);
+      setCurrentView('profile');
     } catch (error: any) {
       console.error('Register error:', error);
       const translated = translateAppwriteError(error);
@@ -300,8 +303,17 @@ export default function App() {
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
+  const handleOpenProfile = (
+    tab?: 'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages'
+  ) => {
+    setProfileInitialTab(tab);
+    setCurrentView('profile');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Return to Home Page when Logo is clicked as explicitly requested
   const handleGoHome = useCallback(() => {
+    setCurrentView('store');
     setSelectedCategory('all');
     setSearchQuery('');
     setDisplayMode('quad');
@@ -322,15 +334,36 @@ export default function App() {
         cartCount={totalCartCount}
         wishlistCount={wishlistIds.length}
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchChange={(q) => {
+          if (currentView !== 'store') {
+            setCurrentView('store');
+          }
+          setSearchQuery(q);
+        }}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenProfile={() => setIsProfilePopupOpen(true)}
+        onOpenProfile={() => handleOpenProfile()}
         onGoHome={handleGoHome}
       />
 
-      {/* 2. Main Body Content - Focused E-Commerce Store */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        <div className="space-y-6 sm:space-y-8">
+      {/* 2. Main Body Content: Dedicated Full Page Profile OR Store */}
+      {currentView === 'profile' ? (
+        <ProfilePage
+          user={user}
+          onGoHome={handleGoHome}
+          onLogout={() => {
+            handleLogout();
+            handleGoHome();
+          }}
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          loadingAuth={loadingAuth}
+          authError={authError}
+          authSuccess={authSuccess}
+          initialTab={profileInitialTab}
+        />
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+          <div className="space-y-6 sm:space-y-8">
           {/* Hero & Category Quick Navigation */}
           <StoreHero
             selectedCategory={selectedCategory}
@@ -585,6 +618,7 @@ export default function App() {
           )}
         </div>
       </main>
+      )}
 
       {/* 5. Footer */}
       <footer className="w-full border-t border-slate-200 bg-white py-8 px-4 text-xs text-slate-600 mt-12">
@@ -679,14 +713,14 @@ export default function App() {
               <div className="flex flex-col gap-1.5 pt-1">
                 <button
                   type="button"
-                  onClick={() => setIsProfilePopupOpen(true)}
+                  onClick={() => handleOpenProfile('messages')}
                   className="text-rose-600 font-bold hover:underline text-xs cursor-pointer text-right flex items-center gap-1"
                 >
                   <span>✉️ فتح الرسائل والاستفسارات</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsProfilePopupOpen(true)}
+                  onClick={() => handleOpenProfile('profile')}
                   className="text-slate-700 font-bold hover:underline text-xs cursor-pointer text-right"
                 >
                   الملف الشخصي والمكافآت
@@ -725,8 +759,9 @@ export default function App() {
         onRemoveItem={handleRemoveCartItem}
         onClearCart={handleClearCart}
         user={user}
-        onOpenAuthBar={() => setIsProfilePopupOpen(true)}
+        onOpenAuthBar={() => handleOpenProfile('profile')}
         onPointsUpdated={handlePointsUpdated}
+        onViewOrdersInProfile={() => handleOpenProfile('orders')}
       />
 
       {/* 8. Cloud Config Modal */}
