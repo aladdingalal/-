@@ -95,7 +95,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         addLoyaltyPoints(
           user.email,
           earned,
-          `شراء طلب أزياء وإكسسوارات بقيمة ${total} ريال من متجر فهد`
+          `شراء طلب أزياء وإكسسوارات بقيمة ${total} ج.م من متجر فهد`
         );
         if (onPointsUpdated) {
           onPointsUpdated();
@@ -253,7 +253,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </div>
                     <div className="flex items-center justify-between pt-1">
                       <span className="font-bold text-rose-600 text-xs font-['Tajawal']">
-                        {item.product.price * item.quantity} ريال
+                        {item.product.price * item.quantity} ج.م
                       </span>
 
                       {/* Quantity buttons */}
@@ -305,11 +305,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <span>عنوان التوصيل:</span>
                   </span>
                   <span className="text-[11px] text-emerald-600 font-bold">
-                    {user.currentCity || 'الرياض'} - {user.residenceCountry || 'السعودية'}
+                    {user.currentCity || 'القاهرة'} - {user.residenceCountry || 'مصر'}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 line-clamp-1">
-                  {user.detailedAddress || 'حي النرجس، شارع عثمان، مبنى 14'}
+                  {user.detailedAddress || 'العنوان المسجل بحسابك في مصر'}
                 </p>
                 {user.phone && (
                   <p className="text-[10px] text-slate-400" dir="ltr">
@@ -319,7 +319,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
             ) : (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs flex items-center justify-between text-amber-900">
-                <span>سجل حسابك في الشريط العلوي لحفظ عنوان الشحن تلقائياً</span>
+                <span>سجل حسابك كعضو لحفظ عنوان الشحن وكسب 50 نقطة</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -337,18 +337,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <div className="space-y-1.5 text-xs text-slate-600">
               <div className="flex justify-between">
                 <span>المجموع الفرعي:</span>
-                <span className="font-bold text-slate-800 font-mono">{subtotal} ريال</span>
+                <span className="font-bold text-slate-800 font-mono">{subtotal} ج.م</span>
               </div>
               <div className="flex justify-between">
                 <span>تكلفة الشحن والتوصيل:</span>
                 <span className="font-bold text-emerald-600 font-mono">
-                  {shipping === 0 ? 'مجاناً (عرض ترويجي)' : `${shipping} ريال`}
+                  {shipping === 0 ? 'مجاناً (عرض ترويجي)' : `${shipping} ج.م`}
                 </span>
               </div>
               <div className="flex justify-between text-sm font-black text-slate-900 pt-1.5 border-t border-slate-200">
                 <span>المجموع الإجمالي:</span>
                 <span className="text-rose-600 font-mono font-['Tajawal'] text-base">
-                  {total} ريال
+                  {total} ج.م
                 </span>
               </div>
             </div>
@@ -365,7 +365,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               ) : (
                 <>
                   <CreditCard className="w-4 h-4" />
-                  <span>إتمام الطلب والدفع ({total} ريال)</span>
+                  <span>إتمام الطلب والدفع ({total} ج.م)</span>
                 </>
               )}
             </button>

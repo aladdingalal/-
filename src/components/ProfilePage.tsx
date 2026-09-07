@@ -57,7 +57,7 @@ interface ProfilePageProps {
   loadingAuth?: boolean;
   authError?: { text: string; hint?: string } | null;
   authSuccess?: string | null;
-  initialTab?: 'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages';
+  initialTab?: 'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages' | 'login' | 'register';
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({
@@ -75,8 +75,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
   // Active Tab state
   const [activeTab, setActiveTab] = useState<string>(
-    initialTab || (isAdmin ? 'admin-orders' : user ? 'orders' : 'login')
+    initialTab || (isAdmin ? 'admin-orders' : user ? 'orders' : 'register')
   );
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Orders State
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
@@ -110,8 +116,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regCountry, setRegCountry] = useState('المملكة العربية السعودية');
-  const [regCity, setRegCity] = useState('الرياض');
+  const [regCountry, setRegCountry] = useState('جمهورية مصر العربية');
+  const [regCity, setRegCity] = useState('القاهرة');
   const [regAddress, setRegAddress] = useState('');
 
   // Sync state when user updates
@@ -120,9 +126,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       setMsgSenderName(user.name || '');
       setMsgSenderEmail(user.email || '');
       setMsgSenderPhone(user.phone || '');
-      if (isAdmin && activeTab === 'login') {
+      if (isAdmin && (activeTab === 'login' || activeTab === 'register')) {
         setActiveTab('admin-orders');
-      } else if (!isAdmin && activeTab === 'login') {
+      } else if (!isAdmin && (activeTab === 'login' || activeTab === 'register')) {
         setActiveTab('orders');
       }
     }
@@ -435,18 +441,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <span>محفظة المكافآت ({loyaltyPoints} نقطة)</span>
               </button>
               {!user && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('login')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-                    activeTab === 'login'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-                  }`}
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>تسجيل الدخول</span>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('register')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all whitespace-nowrap cursor-pointer font-bold ${
+                      activeTab === 'register'
+                        ? 'bg-gradient-to-r from-rose-600 to-indigo-600 text-white shadow-xs'
+                        : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                    }`}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>تسجيل كعضو جديد (+50 نقطة)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('login')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all whitespace-nowrap cursor-pointer font-bold ${
+                      activeTab === 'login'
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>تسجيل الدخول</span>
+                  </button>
+                </>
               )}
             </>
           )}
@@ -566,7 +586,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                                 {item.color && <span>• لون: {item.color}</span>}
                               </div>
                               <p className="font-mono font-bold text-rose-600 text-[11px]">
-                                {item.price * item.quantity} ريال
+                                {item.price * item.quantity} ج.م
                               </p>
                             </div>
                           </div>
@@ -577,12 +597,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                     {/* Order total footer */}
                     <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
                       <div className="space-x-2 space-x-reverse text-slate-500">
-                        <span>المجموع الفرعي: {order.subtotal} ريال</span>
+                        <span>المجموع الفرعي: {order.subtotal} ج.م</span>
                         <span>•</span>
-                        <span>الشحن: {order.shipping === 0 ? 'مجاني' : `${order.shipping} ريال`}</span>
+                        <span>الشحن: {order.shipping === 0 ? 'مجاني' : `${order.shipping} ج.م`}</span>
                       </div>
                       <div className="text-sm font-black text-slate-900">
-                        الإجمالي: <span className="text-rose-600 font-mono text-base">{order.total} ريال</span>
+                        الإجمالي: <span className="text-rose-600 font-mono text-base">{order.total} ج.م</span>
                       </div>
                     </div>
                   </div>
@@ -837,7 +857,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                               الكمية: {item.quantity} {item.size && `• مقاس ${item.size}`} {item.color && `• ${item.color}`}
                             </p>
                             <p className="font-mono font-bold text-rose-600 text-xs">
-                              {item.price * item.quantity} ريال
+                              {item.price * item.quantity} ج.م
                             </p>
                           </div>
                         </div>
@@ -855,7 +875,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                           +{order.pointsEarned || 0} نقطة مكافأة
                         </span>
                         <span className="text-slate-900 font-mono text-base">
-                          الإجمالي: {order.total} ريال
+                          الإجمالي: {order.total} ج.م
                         </span>
                       </div>
                     </div>
@@ -1089,23 +1109,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <span className="font-bold text-slate-900 text-sm font-mono dir-ltr">{user?.email || 'غير مسجل'}</span>
               </div>
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                <span className="text-slate-400 font-medium block">رقم الجوال</span>
+                <span className="text-slate-400 font-medium block">رقم الهاتف (مصر)</span>
                 <span className="font-bold text-slate-900 text-sm font-mono dir-ltr">
-                  {user?.phone || '+966 5X XXX XXXX'}
+                  {user?.phone || 'غير مسجل'}
                 </span>
               </div>
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                <span className="text-slate-400 font-medium block">المدينة والدولة</span>
+                <span className="text-slate-400 font-medium block">المحافظة والدولة</span>
                 <span className="font-bold text-slate-900 text-sm">
-                  {user?.currentCity || 'الرياض'} - {user?.residenceCountry || 'المملكة العربية السعودية'}
+                  {user?.currentCity || 'القاهرة'} - {user?.residenceCountry || 'جمهورية مصر العربية'}
                 </span>
               </div>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs">
-              <span className="text-slate-400 font-medium block">العنوان التفصيلي للتوصيل</span>
+              <span className="text-slate-400 font-medium block">العنوان التفصيلي للتوصيل بمصر</span>
               <p className="font-bold text-slate-800 text-sm">
-                {user?.detailedAddress || 'حي النرجس، شارع عثمان بن عفان، الرياض'}
+                {user?.detailedAddress || 'لم يتم تسجيل العنوان بعد (يمكنك تحديده عند الشراء أو التسجيل)'}
               </p>
             </div>
 
@@ -1139,7 +1159,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   <span className="text-[11px] text-slate-600 font-bold block">رصيد النقاط المتاح</span>
                   <span className="text-3xl font-black text-amber-900 font-mono">{loyaltyPoints}</span>
                   <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">
-                    = خصم {Math.floor(loyaltyPoints / 10)} ريال
+                    = خصم {Math.floor(loyaltyPoints / 10)} ج.م
                   </span>
                 </div>
               </div>
@@ -1246,6 +1266,212 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               >
                 {loadingAuth ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
               </button>
+
+              <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100">
+                ليس لديك حساب بعد؟{' '}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('register')}
+                  className="text-rose-600 font-bold hover:underline cursor-pointer"
+                >
+                  تسجيل كعضو جديد (+50 نقطة هدية)
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* TAB H: Register as a New Member */}
+        {activeTab === 'register' && !user && (
+          <div className="max-w-xl mx-auto bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-5 animate-in fade-in duration-200">
+            <div className="text-center space-y-1">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center mx-auto mb-2 shadow-md shadow-rose-500/20">
+                <UserPlus className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-xl text-slate-900 font-['Tajawal'] flex items-center justify-center gap-2">
+                <span>تسجيل كعضو جديد في متجر فهد</span>
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-200">
+                  + 50 نقطة هدية
+                </span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                أنشئ حسابك للاستفادة من رصيد النقاط وتتبع شحناتك في كافة محافظات مصر
+              </p>
+            </div>
+
+            {authError && (
+              <div className="p-3 bg-red-50 text-red-800 border border-red-200 rounded-xl text-xs space-y-1">
+                <p className="font-bold">{authError.text}</p>
+                {authError.hint && <p className="text-[11px] text-red-600">{authError.hint}</p>}
+              </div>
+            )}
+
+            {authSuccess && (
+              <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold">
+                {authSuccess}
+              </div>
+            )}
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (onRegister) {
+                  await onRegister({
+                    name: regName.trim() || 'عميل متجر فهد',
+                    email: regEmail.trim(),
+                    password: regPassword,
+                    phone: regPhone.trim(),
+                    residenceCountry: regCountry.trim() || 'جمهورية مصر العربية',
+                    currentCity: regCity.trim() || 'القاهرة',
+                    detailedAddress: regAddress.trim(),
+                  });
+                }
+              }}
+              className="space-y-4 text-xs"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">الاسم الكامل:</label>
+                  <input
+                    type="text"
+                    required
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="مثال: أحمد محمد"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">البريد الإلكتروني:</label>
+                  <input
+                    type="email"
+                    required
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="customer@example.com"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">كلمة المرور:</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    placeholder="8 أحرف على الأقل"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white"
+                    dir="ltr"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">رقم الهاتف للتوصيل (مصر):</label>
+                  <input
+                    type="tel"
+                    required
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    placeholder="01012345678"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">الدولة:</label>
+                  <input
+                    type="text"
+                    value={regCountry}
+                    onChange={(e) => setRegCountry(e.target.value)}
+                    className="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-800 font-bold"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">المحافظة / المدينة:</label>
+                  <select
+                    value={regCity}
+                    onChange={(e) => setRegCity(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white text-xs font-bold"
+                  >
+                    <option value="القاهرة">القاهرة</option>
+                    <option value="الجيزة">الجيزة</option>
+                    <option value="الإسكندرية">الإسكندرية</option>
+                    <option value="القليوبية">القليوبية</option>
+                    <option value="الدقهلية (المنصورة)">الدقهلية (المنصورة)</option>
+                    <option value="الغربية (طنطا)">الغربية (طنطا)</option>
+                    <option value="الشرقية (الزقازيق)">الشرقية (الزقازيق)</option>
+                    <option value="المنوفية (شبين الكوم)">المنوفية (شبين الكوم)</option>
+                    <option value="البحيرة (دمنهور)">البحيرة (دمنهور)</option>
+                    <option value="كفر الشيخ">كفر الشيخ</option>
+                    <option value="دمياط">دمياط</option>
+                    <option value="بورسعيد">بورسعيد</option>
+                    <option value="الإسماعيلية">الإسماعيلية</option>
+                    <option value="السويس">السويس</option>
+                    <option value="الفيوم">الفيوم</option>
+                    <option value="بني سويف">بني سويف</option>
+                    <option value="المنيا">المنيا</option>
+                    <option value="أسيوط">أسيوط</option>
+                    <option value="سوهاج">سوهاج</option>
+                    <option value="قنا">قنا</option>
+                    <option value="الأقصر">الأقصر</option>
+                    <option value="أسوان">أسوان</option>
+                    <option value="البحر الأحمر (الغردقة)">البحر الأحمر (الغردقة)</option>
+                    <option value="جنوب سيناء (شرم الشيخ)">جنوب سيناء (شرم الشيخ)</option>
+                    <option value="شمال سيناء">شمال سيناء</option>
+                    <option value="مطروح">مطروح</option>
+                    <option value="الوادي الجديد">الوادي الجديد</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">العنوان التفصيلي للتوصيل:</label>
+                <input
+                  type="text"
+                  required
+                  value={regAddress}
+                  onChange={(e) => setRegAddress(e.target.value)}
+                  placeholder="اسم الشارع، رقم العمارة، رقم الشقة أو علامة مميزة"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>يتم حفظ وتأمين بيانات حسابك وعنوانك سحابياً للاستخدام الفوري عند الشحن والتوصيل.</span>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loadingAuth}
+                className="w-full py-3 px-4 bg-gradient-to-r from-rose-500 via-rose-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loadingAuth ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <UserPlus className="w-4 h-4" />
+                )}
+                <span>{loadingAuth ? 'جاري إنشاء الحساب السحابي...' : 'إنشاء حساب عضو جديد والحصول على 50 نقطة'}</span>
+              </button>
+
+              <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
+                لديك حساب بالفعل؟{' '}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('login')}
+                  className="text-indigo-600 font-bold hover:underline cursor-pointer"
+                >
+                  تسجيل الدخول
+                </button>
+              </div>
             </form>
           </div>
         )}

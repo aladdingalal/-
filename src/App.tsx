@@ -43,7 +43,7 @@ import {
 export default function App() {
   // Navigation & Modal State
   const [currentView, setCurrentView] = useState<'store' | 'profile'>('store');
-  const [profileInitialTab, setProfileInitialTab] = useState<'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages' | undefined>(undefined);
+  const [profileInitialTab, setProfileInitialTab] = useState<'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages' | 'login' | 'register' | undefined>(undefined);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
@@ -304,7 +304,7 @@ export default function App() {
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleOpenProfile = (
-    tab?: 'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages'
+    tab?: 'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages' | 'login' | 'register'
   ) => {
     setProfileInitialTab(tab);
     setCurrentView('profile');
@@ -341,7 +341,7 @@ export default function App() {
           setSearchQuery(q);
         }}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenProfile={() => handleOpenProfile()}
+        onOpenProfile={(tab) => handleOpenProfile(tab)}
         onGoHome={handleGoHome}
       />
 
@@ -698,10 +698,10 @@ export default function App() {
             <div className="space-y-2">
               <h5 className="font-bold text-slate-900">خدمة العملاء والشحن</h5>
               <ul className="space-y-1 text-[11px] text-slate-500">
-                <li>شحن مجاني للطلبات فوق 200 ريال</li>
-                <li>توصيل سريع لجميع المدن والمحافظات</li>
-                <li>دفع عند الاستلام وبطاقات مدى وVisa</li>
-                <li>استبدال واسترجاع سهل خلال 14 يوماً</li>
+                <li>شحن مجاني للطلبات فوق 500 ج.م</li>
+                <li>شحن سريع وتغطية لكافة محافظات مصر</li>
+                <li>دفع عند الاستلام، المحافظ الإلكترونية، وبطاقات الدفع</li>
+                <li>استبدال واسترجاع سهل وسريع خلال 14 يوماً</li>
               </ul>
             </div>
 

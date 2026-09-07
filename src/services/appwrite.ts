@@ -535,25 +535,17 @@ function getLocalMessages(userEmail?: string): CustomerMessage[] {
   let list: CustomerMessage[] = [];
   try {
     const raw = localStorage.getItem(LOCAL_MESSAGES_KEY);
-    if (raw) list = JSON.parse(raw);
+    if (raw) {
+      list = JSON.parse(raw);
+      // Purge any legacy demo messages
+      const filtered = list.filter((m) => m.id !== 'welcome_msg_init' && m.id !== 'welcome_msg_1');
+      if (filtered.length !== list.length) {
+        list = filtered;
+        localStorage.setItem(LOCAL_MESSAGES_KEY, JSON.stringify(list));
+      }
+    }
   } catch (e) {
     console.warn(e);
-  }
-  if (!list.length) {
-    list = [
-      {
-        id: 'welcome_msg_init',
-        senderName: 'فريق خدمة عملاء متجر فهد',
-        senderEmail: 'support@fahadstore.com',
-        recipientEmail: ADMIN_EMAIL,
-        phone: '+966500000000',
-        subject: 'مرحباً بك في متجر فهد للأزياء',
-        message: 'تم تفعيل حسابك ونظام المراسلات المباشرة مع إدارة المتجر لحفظ طلباتك واستفساراتك بصورة آمنة وموثقة.',
-        date: new Date().toISOString(),
-        isCloudSaved: true,
-        status: 'read',
-      },
-    ];
   }
 
   if (userEmail && !isAdminEmail(userEmail)) {
@@ -721,40 +713,17 @@ function getLocalOrders(userEmail?: string): CustomerOrder[] {
   let list: CustomerOrder[] = [];
   try {
     const raw = localStorage.getItem(LOCAL_ORDERS_KEY);
-    if (raw) list = JSON.parse(raw);
+    if (raw) {
+      list = JSON.parse(raw);
+      // Purge any legacy demo orders
+      const filtered = list.filter((o) => o.id !== 'ord_demo_101' && o.id !== 'ord_init_9021');
+      if (filtered.length !== list.length) {
+        list = filtered;
+        localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(list));
+      }
+    }
   } catch (e) {
     console.warn(e);
-  }
-
-  if (!list.length) {
-    list = [
-      {
-        id: 'ord_demo_101',
-        customerName: 'فهد العتيبي',
-        customerEmail: 'customer@fahadstore.com',
-        phone: '+966551234567',
-        city: 'الرياض',
-        address: 'حي النخيل، شارع التخصصي',
-        items: [
-          {
-            productId: 'm1',
-            productName: 'بدلة رجالية كلاسيكية إيطالية',
-            price: 890,
-            quantity: 1,
-            size: 'L',
-            color: 'كحلي داكن',
-          },
-        ],
-        subtotal: 890,
-        shipping: 0,
-        total: 890,
-        date: new Date(Date.now() - 86400000).toISOString(),
-        status: 'processing',
-        recipientAdminEmail: ADMIN_EMAIL,
-        pointsEarned: 89,
-        isCloudSaved: true,
-      },
-    ];
   }
 
   if (userEmail && !isAdminEmail(userEmail)) {

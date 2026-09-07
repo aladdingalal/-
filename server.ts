@@ -67,50 +67,9 @@ interface CustomerMessage {
   status?: 'unread' | 'read' | 'replied';
 }
 
-// In-memory cache synced with cloud
-let messagesCache: CustomerMessage[] = [
-  {
-    id: 'welcome_msg_1',
-    senderName: 'إدارة متجر فهد (FAHAD)',
-    senderEmail: 'support@fahadstore.com',
-    recipientEmail: ADMIN_EMAIL,
-    phone: '+966500000000',
-    subject: 'مرحباً بك في سحابة متجر فهد',
-    message: 'تم تفعيل المفتاح السحابي وربط النظام بحساب الإدارة لاستقبال كافة الطلبات والرسائل وحفظها سحابياً.',
-    date: new Date().toISOString(),
-    isCloudSaved: true,
-    status: 'read',
-  },
-];
-
-let ordersCache: CustomerOrder[] = [
-  {
-    id: 'ord_init_9021',
-    customerName: 'فهد العتيبي',
-    customerEmail: 'customer@fahadstore.com',
-    phone: '+966551234567',
-    city: 'الرياض',
-    address: 'حي النخيل، طريق التخصصي',
-    items: [
-      {
-        productId: 'm1',
-        productName: 'بدلة رجالية كلاسيكية إيطالية',
-        price: 890,
-        quantity: 1,
-        size: 'L',
-        color: 'كحلي داكن',
-      },
-    ],
-    subtotal: 890,
-    shipping: 0,
-    total: 890,
-    date: new Date(Date.now() - 86400000).toISOString(),
-    status: 'processing',
-    recipientAdminEmail: ADMIN_EMAIL,
-    pointsEarned: 89,
-    isCloudSaved: true,
-  },
-];
+// In-memory cache synced with cloud (Zero fake data - only real cloud synced data)
+let messagesCache: CustomerMessage[] = [];
+let ordersCache: CustomerOrder[] = [];
 
 // Helper to headers
 function getAppwriteHeaders() {
@@ -521,7 +480,7 @@ app.post('/api/cloud/orders', async (req, res) => {
       customerName: (customerName || 'عميل متجر فهد').trim(),
       customerEmail: (customerEmail || 'customer@fahadstore.com').toLowerCase().trim(),
       phone: phone?.trim() || '',
-      city: city?.trim() || 'الرياض',
+      city: city?.trim() || 'القاهرة',
       address: address?.trim() || '',
       items: items.map((i: any) => ({
         productId: i.productId || i.id,

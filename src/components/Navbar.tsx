@@ -7,6 +7,8 @@ import {
   MessageSquare,
   X,
   Layers,
+  UserPlus,
+  LogIn,
 } from 'lucide-react';
 import type { CloudConnectionStatus, UserProfile } from '../types';
 
@@ -18,7 +20,7 @@ interface NavbarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenCart: () => void;
-  onOpenProfile: () => void;
+  onOpenProfile: (tab?: 'login' | 'register' | 'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages') => void;
   onGoHome: () => void;
 }
 
@@ -103,26 +105,52 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Customer Profile & Messages Button */}
-          <button
-            type="button"
-            onClick={onOpenProfile}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200/90 text-slate-800 text-xs font-bold transition-all cursor-pointer border border-slate-200/80 shadow-2xs"
-            title="الملف الشخصي، استفسارات المتجر، وآخر التحديثات"
-          >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
-              {user ? (user.name ? user.name[0] : 'U') : <User className="w-3.5 h-3.5" />}
+          {/* Customer Profile & Messages Button OR Auth Buttons */}
+          {user ? (
+            <button
+              type="button"
+              onClick={() => onOpenProfile()}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200/90 text-slate-800 text-xs font-bold transition-all cursor-pointer border border-slate-200/80 shadow-2xs"
+              title="الملف الشخصي والطلبات والمراسلات"
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                {user.name ? user.name[0] : 'U'}
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="hidden sm:inline font-bold">
+                  {user.name.split(' ')[0]}
+                </span>
+                <span className="sm:hidden text-[11px] font-bold">
+                  حسابي
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              </div>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <button
+                type="button"
+                onClick={() => onOpenProfile('register')}
+                className="flex items-center gap-1 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:opacity-95 text-white text-[11px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs"
+                title="تسجيل حساب جديد كعضو والحصول على 50 نقطة مكافأة"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">تسجيل كعضو جديد</span>
+                <span className="sm:hidden">عضو جديد</span>
+                <span className="text-[9px] bg-white/20 px-1 rounded-sm font-mono">+50ن</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onOpenProfile('login')}
+                className="flex items-center gap-1 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] sm:text-xs font-bold transition-all cursor-pointer border border-slate-200"
+                title="تسجيل الدخول"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>دخول</span>
+              </button>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="hidden sm:inline font-bold">
-                {user ? user.name.split(' ')[0] : 'الملف الشخصي'}
-              </span>
-              <span className="sm:hidden text-[11px] font-bold">
-                {user ? 'حسابي' : 'حسابي'}
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-            </div>
-          </button>
+          )}
 
           {/* Cart Button (السلة) */}
           <button

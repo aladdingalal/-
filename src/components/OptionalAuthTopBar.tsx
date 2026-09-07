@@ -68,8 +68,8 @@ export const OptionalAuthTopBar: React.FC<OptionalAuthTopBarProps> = ({
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regCountry, setRegCountry] = useState('المملكة العربية السعودية');
-  const [regCity, setRegCity] = useState('الرياض');
+  const [regCountry, setRegCountry] = useState('جمهورية مصر العربية');
+  const [regCity, setRegCity] = useState('القاهرة');
   const [regAddress, setRegAddress] = useState('');
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -273,7 +273,7 @@ export const OptionalAuthTopBar: React.FC<OptionalAuthTopBarProps> = ({
                         </span>
                         <span className="text-sm font-bold text-slate-900">نقطة مكافآت</span>
                         <span className="text-xs font-medium text-slate-800 bg-white/70 px-2 py-0.5 rounded-md border border-amber-300/80 mr-2">
-                          تساوي {(((user.loyaltyPoints ?? 50) * 0.1)).toFixed(1)} ريال رصيد خصم
+                          تساوي {(((user.loyaltyPoints ?? 50) * 0.1)).toFixed(1)} ج.م رصيد خصم
                         </span>
                       </div>
                       <p className="text-xs text-slate-800 font-medium">
@@ -361,15 +361,15 @@ export const OptionalAuthTopBar: React.FC<OptionalAuthTopBarProps> = ({
                     <span className="text-slate-400 block mb-1 text-[11px] font-medium">بلد الإقامة</span>
                     <span className="font-bold text-slate-800 flex items-center gap-1">
                       <Globe className="w-3.5 h-3.5 text-sky-500" />
-                      <span>{user.residenceCountry || 'المملكة العربية السعودية'}</span>
+                      <span>{user.residenceCountry || 'جمهورية مصر العربية'}</span>
                     </span>
                   </div>
 
                   <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-slate-400 block mb-1 text-[11px] font-medium">المدينة الحالية</span>
+                    <span className="text-slate-400 block mb-1 text-[11px] font-medium">المحافظة الحالية</span>
                     <span className="font-bold text-slate-800 flex items-center gap-1">
                       <Building className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>{user.currentCity || 'الرياض'}</span>
+                      <span>{user.currentCity || 'القاهرة'}</span>
                     </span>
                   </div>
 
@@ -557,7 +557,7 @@ export const OptionalAuthTopBar: React.FC<OptionalAuthTopBarProps> = ({
                           required
                           value={regPhone}
                           onChange={(e) => setRegPhone(e.target.value)}
-                          placeholder="+966 50 123 4567"
+                          placeholder="01012345678"
                           dir="ltr"
                           className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs"
                         />
@@ -573,8 +573,8 @@ export const OptionalAuthTopBar: React.FC<OptionalAuthTopBarProps> = ({
                           onChange={(e) => setRegCountry(e.target.value)}
                           className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs"
                         >
+                          <option value="جمهورية مصر العربية">جمهورية مصر العربية</option>
                           <option value="المملكة العربية السعودية">المملكة العربية السعودية</option>
-                          <option value="مصر">مصر</option>
                           <option value="الإمارات العربية المتحدة">الإمارات العربية المتحدة</option>
                           <option value="الكويت">الكويت</option>
                           <option value="قطر">قطر</option>

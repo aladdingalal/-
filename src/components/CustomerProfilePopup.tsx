@@ -83,8 +83,8 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
   const [regEmail, setRegEmail] = useState('');
   const [regPass, setRegPass] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regCountry, setRegCountry] = useState('المملكة العربية السعودية');
-  const [regCity, setRegCity] = useState('الرياض');
+  const [regCountry, setRegCountry] = useState('جمهورية مصر العربية');
+  const [regCity, setRegCity] = useState('القاهرة');
   const [regAddress, setRegAddress] = useState('');
 
   // New message form state
@@ -437,11 +437,11 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Globe className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{user.residenceCountry || 'المملكة العربية السعودية'}</span>
+                    <span>{user.residenceCountry || 'جمهورية مصر العربية'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Building className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{user.currentCity || 'الرياض'}</span>
+                    <span>{user.currentCity || 'القاهرة'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
@@ -458,11 +458,11 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                     <span>رصيد الخصم المالي المتاح</span>
                   </div>
                   <p className="text-[11px] text-amber-700">
-                    يمكنك خصم {cashDiscount} ريال فوراً عند إتمام عملية الشراء من السلة.
+                    يمكنك خصم {cashDiscount} ج.م فوراً عند إتمام عملية الشراء من السلة.
                   </p>
                 </div>
                 <div className="font-black text-sm text-amber-900 font-mono px-3 py-1 bg-white rounded-xl border border-amber-200">
-                  {cashDiscount} ر.س
+                  {cashDiscount} ج.م
                 </div>
               </div>
             </div>
@@ -600,7 +600,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                       type="text"
                       value={regCountry}
                       onChange={(e) => setRegCountry(e.target.value)}
-                      placeholder="المملكة العربية السعودية"
+                      placeholder="جمهورية مصر العربية"
                       className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
                     />
                   </div>
@@ -610,19 +610,19 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                       type="text"
                       value={regCity}
                       onChange={(e) => setRegCity(e.target.value)}
-                      placeholder="الرياض، جدة، الدمام..."
+                      placeholder="القاهرة، الإسكندرية، الجيزة..."
                       className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">العنوان التفصيلي (الحي، الشارع، المبنى)</label>
+                  <label className="text-xs font-bold text-slate-700">العنوان التفصيلي (الشارع، رقم العمارة، الشقة)</label>
                   <input
                     type="text"
                     value={regAddress}
                     onChange={(e) => setRegAddress(e.target.value)}
-                    placeholder="حي النرجس، شارع عثمان، عمارة 12"
+                    placeholder="شارع التحرير، الدقي، عمارة 15"
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400"
                   />
                 </div>
@@ -847,7 +847,7 @@ export const CustomerProfilePopup: React.FC<CustomerProfilePopupProps> = ({
                       مكافآت
                     </span>
                     <h4 className="text-xs font-bold text-slate-900 font-['Tajawal']">
-                      4. مكافأة 50 نقطة ترحيبية وخصم مالي بالريال
+                      4. مكافأة 50 نقطة ترحيبية وخصم مالي بالجنيه المصري
                     </h4>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">

@@ -113,10 +113,10 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               <span className="text-2xl font-black text-rose-600 font-['Tajawal']">
                 {product.price}
               </span>
-              <span className="text-sm font-bold text-slate-700">ريال سعودي</span>
+              <span className="text-sm font-bold text-slate-700">جنيه مصري (ج.م)</span>
               {product.originalPrice && (
                 <span className="text-sm text-slate-400 line-through mr-1">
-                  {product.originalPrice} ريال
+                  {product.originalPrice} ج.م
                 </span>
               )}
             </div>
@@ -206,9 +206,9 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
                 {user?.currentCity ? (
-                  <>توصيل سريع متاح لمدينة <strong>{user.currentCity}</strong> خلال 24-48 ساعة</>
+                  <>توصيل سريع متاح لمحافظة <strong>{user.currentCity}</strong> خلال 24-48 ساعة</>
                 ) : (
-                  <>شحن سريع مجاني للطلبات فوق 200 ريال لجميع المدن</>
+                  <>شحن سريع مجاني للطلبات فوق 500 ج.م لكافة محافظات مصر</>
                 )}
               </span>
             </div>
@@ -230,7 +230,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               ) : (
                 <>
                   <ShoppingBag className="w-5 h-5" />
-                  <span>إضافة للسلة ({product.price * quantity} ريال)</span>
+                  <span>إضافة للسلة ({product.price * quantity} ج.م)</span>
                 </>
               )}
             </button>

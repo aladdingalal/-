@@ -732,15 +732,15 @@ export const CloudImageTestingPage: React.FC<CloudImageTestingPageProps> = ({
               <span className="text-slate-400 block mb-1">بلد الإقامة</span>
               <span className="font-bold text-slate-900 flex items-center gap-1">
                 <Globe className="w-3.5 h-3.5 text-sky-500" />
-                <span>{user.residenceCountry || 'المملكة العربية السعودية'}</span>
+                <span>{user.residenceCountry || 'جمهورية مصر العربية'}</span>
               </span>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-              <span className="text-slate-400 block mb-1">المدينة الحالية</span>
+              <span className="text-slate-400 block mb-1">المحافظة الحالية</span>
               <span className="font-bold text-slate-900 flex items-center gap-1">
                 <Building className="w-3.5 h-3.5 text-indigo-500" />
-                <span>{user.currentCity || 'الرياض'}</span>
+                <span>{user.currentCity || 'القاهرة'}</span>
               </span>
             </div>
 

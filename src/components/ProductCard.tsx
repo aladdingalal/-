@@ -131,7 +131,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <span className="text-sm sm:text-base font-black text-rose-600 font-['Tajawal']">
                 {product.price}
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-slate-600">ريال</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-600">ج.م</span>
               {product.originalPrice && (
                 <span className="text-[10px] text-slate-400 line-through mr-1">
                   {product.originalPrice}

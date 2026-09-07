@@ -275,13 +275,13 @@ export const CustomerMessagesModal: React.FC<CustomerMessagesModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 justify-end">
                     <Phone className="w-3.5 h-3.5 text-slate-400" />
-                    <span>رقم الجوال (اختياري)</span>
+                    <span>رقم الهاتف بمصر (اختياري)</span>
                   </label>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+966 5x xxx xxxx"
+                    placeholder="01012345678"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-400 focus:outline-none transition-all"
                     dir="ltr"
                   />
