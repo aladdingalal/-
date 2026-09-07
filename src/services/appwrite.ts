@@ -157,6 +157,25 @@ export function saveUserProfileMeta(email: string, meta: Partial<UserProfile>): 
   }
 }
 
+export function findUserProfileByPhone(phone: string): { email: string; profile: Partial<UserProfile> } | null {
+  try {
+    const raw = localStorage.getItem(USER_PROFILES_KEY);
+    if (!raw) return null;
+    const db = JSON.parse(raw);
+    const cleanDigits = phone.replace(/\D/g, '');
+    if (!cleanDigits) return null;
+    for (const [emailKey, profile] of Object.entries(db)) {
+      const p = profile as any;
+      if (p.phone && p.phone.replace(/\D/g, '') === cleanDigits) {
+        return { email: emailKey, profile: p };
+      }
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+  return null;
+}
+
 export function getStoredConfig(): CloudConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -844,7 +863,11 @@ export async function registerNewUser(
 ): Promise<UserProfile> {
   const account = getAppwriteAccount();
   const uniqueId = ID.unique();
-  const cleanEmail = email.toLowerCase().trim();
+  let cleanEmail = email.toLowerCase().trim();
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    const digits = (extraData?.phone || 'customer').replace(/\D/g, '');
+    cleanEmail = `${digits || Date.now()}@fahadstore.com`;
+  }
 
   let user: any;
   try {
@@ -882,11 +905,22 @@ export async function registerNewUser(
 }
 
 /**
- * Sign in with email and password
+ * Sign in with email and password or phone number
  */
-export async function loginWithEmail(email: string, pass: string): Promise<UserProfile> {
+export async function loginWithEmail(emailOrPhone: string, pass: string): Promise<UserProfile> {
   const account = getAppwriteAccount();
-  const cleanEmail = email.toLowerCase().trim();
+  let cleanEmail = emailOrPhone.toLowerCase().trim();
+
+  // If user entered phone number instead of email
+  if (!cleanEmail.includes('@')) {
+    const found = findUserProfileByPhone(cleanEmail);
+    if (found) {
+      cleanEmail = found.email;
+    } else {
+      const cleanDigits = cleanEmail.replace(/\D/g, '');
+      cleanEmail = `${cleanDigits}@fahadstore.com`;
+    }
+  }
   
   await account.createEmailPasswordSession(cleanEmail, pass);
   

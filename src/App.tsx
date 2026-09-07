@@ -10,6 +10,7 @@ import { CustomerProfilePopup } from './components/CustomerProfilePopup';
 import { ProfilePage } from './components/ProfilePage';
 import { CategoryQuadSection } from './components/CategoryQuadSection';
 import { DedicatedCategoryView } from './components/DedicatedCategoryView';
+import { FloatingCartButton } from './components/FloatingCartButton';
 import { INITIAL_PRODUCTS } from './data/products';
 import {
   testCloudConnection,
@@ -302,6 +303,7 @@ export default function App() {
   }, [filteredProducts, quadPage, displayMode]);
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const cartTotalAmount = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
   const handleOpenProfile = (
     tab?: 'orders' | 'messages' | 'profile' | 'wallet' | 'admin-orders' | 'admin-messages' | 'login' | 'register'
@@ -798,6 +800,14 @@ export default function App() {
         }}
         cloudStatus={cloudStatus}
         onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+
+      {/* 11. Floating Cart Action Button at the bottom of the page */}
+      <FloatingCartButton
+        cartCount={totalCartCount}
+        totalAmount={cartTotalAmount}
+        onClick={() => setIsCartOpen(true)}
+        isOpen={isCartOpen}
       />
     </div>
   );
